@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using DefaultNamespace;
 using UnityEngine;
 
 [Serializable]
@@ -8,7 +9,7 @@ using UnityEngine;
 public class InventoryItem
 {
     public ItemData itemData;
-    public GameObject itemObject;
+    public ItemSlot itemSlot;
     public int stackSize;
 
     public InventoryItem(ItemData item)

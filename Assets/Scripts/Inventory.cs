@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using DefaultNamespace;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -11,7 +12,7 @@ public class Inventory : MonoBehaviour
     private Dictionary<ItemData, InventoryItem> itemDictionary = new Dictionary<ItemData, InventoryItem>();
 
     public Transform itemContent;
-    public GameObject itemSlot;
+    public ItemSlot itemSlotPrefab;
 
     public Toggle enableRemove;
     
@@ -23,24 +24,20 @@ public class Inventory : MonoBehaviour
         if (itemDictionary.TryGetValue(itemData, out InventoryItem item))
         {
             item.AddToStack();
-            var itemStackSize = item.itemObject.transform.Find("StackSize").GetComponent<TextMeshProUGUI>();
+            var itemStackSize = item.itemSlot.ItemStackSize;
             itemStackSize.text = item.stackSize.ToString();
             Debug.Log($"{item.itemData.displayName} total stack is now {item.stackSize}");
         }
         else
         {
-            InventoryItem newItem = new InventoryItem(itemData);
+            var newItem = new InventoryItem(itemData);
             itemDictionary.Add(itemData, newItem);
-
-            GameObject gameObject = Instantiate(itemSlot, itemContent);
-            newItem.itemObject = gameObject;
-            var itemName = gameObject.transform.Find("ItemName").GetComponent<TextMeshProUGUI>();
-            var itemIcon = gameObject.transform.Find("ItemIcon").GetComponent<Image>();
-            var itemStackSize = gameObject.transform.Find("StackSize").GetComponent<TextMeshProUGUI>();
-
-            itemName.text = newItem.itemData.displayName;
-            itemIcon.sprite = newItem.itemData.icon;
-            itemStackSize.text = newItem.stackSize.ToString();
+            var itemSlot = Instantiate(itemSlotPrefab, itemContent);
+            newItem.itemSlot = itemSlot;
+            itemSlot.OnRemove += RemoveStack;
+            itemSlot.ItemName.text = newItem.itemData.displayName;
+            itemSlot.ItemIcon.sprite = newItem.itemData.icon;
+            itemSlot.ItemStackSize.text = newItem.stackSize.ToString();
             Debug.Log($"Added {itemData.displayName} to the inventory for the first time");
         }
     }
@@ -52,7 +49,7 @@ public class Inventory : MonoBehaviour
             item.RemoveFromStack();
             if (item.stackSize == 0)
             {
-                Destroy(item.itemObject);
+                Destroy(item.itemSlot.gameObject);
                 itemDictionary.Remove(itemData);
             }
         }
@@ -75,19 +72,20 @@ public class Inventory : MonoBehaviour
             }
         }
     }
-
-    public void RemoveStack(GameObject itemSlot)
+    
+    public void RemoveStack(ItemSlot itemSlot)
     {
         Debug.Log("RemoveStack is called");
+        itemSlot.OnRemove -= RemoveStack;
         foreach (var key in itemDictionary.Keys)
         {
-            if (key.displayName == itemSlot.transform.Find("ItemName").GetComponent<TextMeshProUGUI>().text)
+            if (key.displayName == itemSlot.ItemName.text)
             {
                 itemDictionary.Remove(key);
                 break;
             }
         }
-        Destroy(itemSlot);
+        Destroy(itemSlot.gameObject);
         Debug.Log("itemSlot destroyed");
     }
 }
