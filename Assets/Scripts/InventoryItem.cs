@@ -11,6 +11,7 @@ public class InventoryItem
     public ItemData itemData;
     public ItemSlot itemSlot;
     public int stackSize;
+    
 
     public InventoryItem(ItemData item)
     {

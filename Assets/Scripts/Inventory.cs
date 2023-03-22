@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using DefaultNamespace;
 using TMPro;
 using Unity.VisualScripting;
@@ -9,7 +10,8 @@ using UnityEngine.UI;
 
 public class Inventory : MonoBehaviour
 {
-    private Dictionary<ItemData, InventoryItem> itemDictionary = new Dictionary<ItemData, InventoryItem>();
+    [SerializeField] private int maxSlots = 12;
+    private List<InventoryItem> items = new List<InventoryItem>();
 
     public Transform itemContent;
     public ItemSlot itemSlotPrefab;
@@ -18,39 +20,44 @@ public class Inventory : MonoBehaviour
     
     private void OnEnable() => Collectible.OnItemCollected += Add;
     private void OnDisable() => Collectible.OnItemCollected -= Add;
-
+    
+    private InventoryItem foundItem;
     public void Add(ItemData itemData)
     {
-        if (itemDictionary.TryGetValue(itemData, out InventoryItem item))
+        foundItem = items.FirstOrDefault(item => item.itemData == itemData && item.itemData.maxStackSize > item.stackSize);
+        if (foundItem != null)
         {
-            item.AddToStack();
-            var itemStackSize = item.itemSlot.ItemStackSize;
-            itemStackSize.text = item.stackSize.ToString();
-            Debug.Log($"{item.itemData.displayName} total stack is now {item.stackSize}");
+            foundItem.AddToStack();
+            var itemStackSize = foundItem.itemSlot.ItemStackSize;
+            itemStackSize.text = foundItem.stackSize.ToString();
+            Debug.Log($"{foundItem.itemData.displayName} total stack is now {foundItem.stackSize}");
         }
         else
         {
+            if(items.Count >= maxSlots) return;
             var newItem = new InventoryItem(itemData);
-            itemDictionary.Add(itemData, newItem);
+            items.Add(newItem);
             var itemSlot = Instantiate(itemSlotPrefab, itemContent);
             newItem.itemSlot = itemSlot;
             itemSlot.OnRemove += RemoveStack;
             itemSlot.ItemName.text = newItem.itemData.displayName;
             itemSlot.ItemIcon.sprite = newItem.itemData.icon;
             itemSlot.ItemStackSize.text = newItem.stackSize.ToString();
+            EnableItemsRemove();
             Debug.Log($"Added {itemData.displayName} to the inventory for the first time");
         }
     }
 
     public void Remove(ItemData itemData)
     {
-        if (itemDictionary.TryGetValue(itemData, out InventoryItem item))
+        foundItem = items.FirstOrDefault(item => item.itemData == itemData);
+        if (foundItem != null)
         {
-            item.RemoveFromStack();
-            if (item.stackSize == 0)
+            foundItem.RemoveFromStack();
+            if (foundItem.stackSize == 0)
             {
-                Destroy(item.itemSlot.gameObject);
-                itemDictionary.Remove(itemData);
+                Destroy(foundItem.itemSlot.gameObject);
+                items.RemoveAt(items.IndexOf(foundItem));
             }
         }
     }
@@ -75,13 +82,14 @@ public class Inventory : MonoBehaviour
     
     public void RemoveStack(ItemSlot itemSlot)
     {
+        if (!enableRemove.isOn) return;
         Debug.Log("RemoveStack is called");
         itemSlot.OnRemove -= RemoveStack;
-        foreach (var key in itemDictionary.Keys)
+        foreach (var item in items)
         {
-            if (key.displayName == itemSlot.ItemName.text)
+            if (item.itemData.displayName == itemSlot.ItemName.text)
             {
-                itemDictionary.Remove(key);
+                items.Remove(item);
                 break;
             }
         }
