@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class AIMeleeAttack : MonoBehaviour
 {
+    public float visionDistance;
     public float attackDistance;
     public float damage;
 
