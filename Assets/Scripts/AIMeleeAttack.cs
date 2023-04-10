@@ -6,7 +6,9 @@ public class AIMeleeAttack : MonoBehaviour
 {
     public float visionDistance;
     public float attackDistance;
-    public float damage;
+    public float damage = 1;
+
+    public PlayerHP playerHP;
 
     // Start is called before the first frame update
     void Start()
@@ -18,5 +20,13 @@ public class AIMeleeAttack : MonoBehaviour
     void Update()
     {
         
+    }
+
+    public void OnCollisionEnter2D(Collision2D collision)
+    {
+        if(collision.gameObject.tag == "Player")
+        {
+            playerHP.TakeDamage(damage);
+        }
     }
 }
