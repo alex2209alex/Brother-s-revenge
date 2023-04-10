@@ -309,9 +309,10 @@ GameObject:
   - component: {fileID: 424738571}
   - component: {fileID: 424738572}
   - component: {fileID: 424738573}
+  - component: {fileID: 424738574}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -494,6 +495,19 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &424738574
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 424738566}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9cb4a9b90c966e24cb73a106b060d483, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentHP: 0
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -781,9 +795,10 @@ GameObject:
   m_Component:
   - component: {fileID: 883327656}
   - component: {fileID: 883327655}
-  - component: {fileID: 883327654}
   - component: {fileID: 883327658}
   - component: {fileID: 883327657}
+  - component: {fileID: 883327654}
+  - component: {fileID: 883327659}
   m_Layer: 0
   m_Name: Square
   m_TagString: Untagged
@@ -803,8 +818,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e9629c8dd1ec1b46a929c97f0e59dda, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  aIMeleeAttack: {fileID: 883327659}
   player: {fileID: 424738566}
   speed: 1
+  distanceBetween: 0
 --- !u!212 &883327655
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -919,6 +936,22 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &883327659
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 883327653}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db85c6bfcac78c34b9a0587c20c9b66f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  visionDistance: 7
+  attackDistance: 0
+  damage: 5
+  playerHP: {fileID: 424738574}
 --- !u!1 &895813406
 GameObject:
   m_ObjectHideFlags: 0
