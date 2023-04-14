@@ -273,8 +273,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 20e666d6e972ce1489a45b2f4a86952b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  numRooms: 120
+  mainRoomsPercentage: 0.15
+  extraEdgesPercentage: 0.15
   cellSize: 1
-  numRooms: 75
   color: {r: 1, g: 1, b: 1, a: 1}
   Map: {fileID: 552253867}
   numLines: 0

@@ -8,6 +8,7 @@ public class DungeonGenerationScript : MonoBehaviour
 {
     public int numRooms;
     public float mainRoomsPercentage = 0.08f;
+    public float extraEdgesPercentage = 0.15f;
     public float cellSize;
     public Color color = Color.white;
     public Grid Map;
@@ -33,22 +34,125 @@ public class DungeonGenerationScript : MonoBehaviour
 
     Sprite CreateRectangleSprite(float width, float height)
     {
-        Texture2D texture = new Texture2D((int)width, (int)height);  // create a new texture
-        Color[] colors = new Color[(int)(width * height)];  // create an array of colors
+        Texture2D texture = new Texture2D((int)width, (int)height);
+        Color[] colors = new Color[(int)(width * height)];
 
         for (int i = 0; i < colors.Length; i++)
         {
-            colors[i] = Color.white;  // set all the colors to white
+            colors[i] = Color.white;
         }
 
-        texture.SetPixels(colors);  // set the colors of the texture
-        texture.Apply();  // apply the changes to the texture
+        texture.SetPixels(colors);
+        texture.Apply();
 
-        Sprite sprite = Sprite.Create(texture, new Rect(0, 0, width, height), Vector2.zero);  // create a new sprite from the texture
+        Sprite sprite = Sprite.Create(texture, new Rect(0, 0, width, height), Vector2.zero);
 
-        return sprite;  // return the sprite
+        return sprite;
     }
-    
+
+    public List<(int, int)> GetAllEdges(Dictionary<int, HashSet<int>> graph)
+    {
+        List<(int, int)> edges = new List<(int, int)>();
+        foreach (var kvp in graph)
+        {
+            int source = kvp.Key;
+            foreach (int destination in kvp.Value)
+            {
+                edges.Add((source, destination));
+            }
+        }
+        return edges;
+    }
+
+    public int Find(int[] parent, int node)
+    {
+        if (parent[node] != node)
+        {
+            parent[node] = Find(parent, parent[node]);
+        }
+        return parent[node];
+    }
+
+    public void Union(int[] parent, int[] rank, int node1, int node2)
+    {
+        int root1 = Find(parent, node1);
+        int root2 = Find(parent, node2);
+
+        if (root1 == root2)
+        {
+            return;
+        }
+
+        if (rank[root1] > rank[root2])
+        {
+            parent[root2] = root1;
+        }
+        else if (rank[root2] > rank[root1])
+        {
+            parent[root1] = root2;
+        }
+        else
+        {
+            parent[root2] = root1;
+            rank[root1]++;
+        }
+    }
+
+    int roomDistance(int fromNode, int toNode)
+    {
+        Vector2 startPoint = new Vector2(sortedRectangles[fromNode].transform.position.x + sortedRectangles[fromNode].GetComponent<SpriteRenderer>().bounds.size.x / 2, sortedRectangles[fromNode].transform.position.y + sortedRectangles[fromNode].GetComponent<SpriteRenderer>().bounds.size.y / 2);
+        Vector2 endPoint = new Vector2(sortedRectangles[toNode].transform.position.x + sortedRectangles[toNode].GetComponent<SpriteRenderer>().bounds.size.x / 2, sortedRectangles[toNode].transform.position.y + sortedRectangles[toNode].GetComponent<SpriteRenderer>().bounds.size.y / 2);
+
+        float distance = Vector2.Distance(startPoint, endPoint);
+        int distanceAsInt = Mathf.RoundToInt(distance);
+
+        return distanceAsInt;
+    }
+
+    public Dictionary<int, HashSet<int>> GetMinimalSpanningTree(Dictionary<int, HashSet<int>> graph)
+    {
+        Dictionary<int, HashSet<int>> minimalSpanningTree = new Dictionary<int, HashSet<int>>();
+
+        List<(int, int)> edges = GetAllEdges(graph);
+
+        edges.Sort((x, y) => roomDistance(x.Item1, x.Item2) - roomDistance(y.Item1, y.Item2));
+
+        int[] parent = new int[graph.Count];
+        int[] rank = new int[graph.Count];
+        for (int i = 0; i < parent.Length; i++)
+        {
+            parent[i] = i;
+            rank[i] = 0;
+        }
+
+        foreach ((int, int) edge in edges)
+        {
+            int source = edge.Item1;
+            int destination = edge.Item2;
+
+            if (Find(parent, source) != Find(parent, destination))
+            {
+                if (!minimalSpanningTree.ContainsKey(source))
+                {
+                    minimalSpanningTree[source] = new HashSet<int>();
+                }
+                if (!minimalSpanningTree.ContainsKey(destination))
+                {
+                    minimalSpanningTree[destination] = new HashSet<int>();
+                }
+
+                minimalSpanningTree[source].Add(destination);
+                minimalSpanningTree[destination].Add(source);
+
+                Union(parent, rank, source, destination);
+            }
+        }
+
+        return minimalSpanningTree;
+    }
+
+
+
     void Start()
     {
         cellSize = Map.cellSize[0] * 100;
@@ -97,11 +201,61 @@ public class DungeonGenerationScript : MonoBehaviour
 
             rectangles[i].AddComponent<RoomScript>();
         }
-
-        
-
-        
     }
+
+    public Dictionary<int, HashSet<int>> AddExtraEdges(Dictionary<int, HashSet<int>> graph, Dictionary<int, HashSet<int>> minimalSpanningTree, float extraEdgesPercentage)
+    {
+        Dictionary<int, HashSet<int>> thirdGraph = new Dictionary<int, HashSet<int>>();
+
+        foreach (KeyValuePair<int, HashSet<int>> kvp in minimalSpanningTree)
+        {
+            thirdGraph[kvp.Key] = new HashSet<int>(kvp.Value);
+        }
+
+        int numAdditionalEdges = Mathf.RoundToInt(graph.Count * extraEdgesPercentage);
+
+        List<(int, int)> edgesToAdd = new List<(int, int)>();
+        foreach (KeyValuePair<int, HashSet<int>> kvp in graph)
+        {
+            int source = kvp.Key;
+            foreach (int destination in kvp.Value)
+            {
+                if (!minimalSpanningTree.ContainsKey(source) || !minimalSpanningTree[source].Contains(destination))
+                {
+                    if (edgesToAdd.Count < numAdditionalEdges)
+                    {
+                        edgesToAdd.Add((source, destination));
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        foreach ((int, int) edge in edgesToAdd)
+        {
+            int source = edge.Item1;
+            int destination = edge.Item2;
+
+            if (!thirdGraph.ContainsKey(source))
+            {
+                thirdGraph[source] = new HashSet<int>();
+            }
+            if (!thirdGraph.ContainsKey(destination))
+            {
+                thirdGraph[destination] = new HashSet<int>();
+            }
+
+            thirdGraph[source].Add(destination);
+            thirdGraph[destination].Add(source);
+        }
+
+        return thirdGraph;
+    }
+
+
 
     private void Update()
     {
@@ -131,7 +285,7 @@ public class DungeonGenerationScript : MonoBehaviour
                     rb.gameObject.transform.position = roundedPos;
                     sortedRectangles.Add(rb.gameObject);
                 }
-                // Sort rectangles by area
+
                 sortedRectangles.Sort((r1, r2) => r2.GetComponent<SpriteRenderer>().sprite.texture.width * r2.GetComponent<SpriteRenderer>().sprite.texture.height -
                                                 r1.GetComponent<SpriteRenderer>().sprite.texture.width * r1.GetComponent<SpriteRenderer>().sprite.texture.height);
 
@@ -158,38 +312,66 @@ public class DungeonGenerationScript : MonoBehaviour
                 startPoints = new Vector2[numLines];
                 endPoints = new Vector2[numLines];
 
+                Dictionary<int, HashSet<int>> graph = new Dictionary<int, HashSet<int>>();
+
                 for (int i = 0; i < triangles.Length; i += 3)
                 {
-                    int triIndex1 = triangles[i];
-                    int triIndex2 = triangles[i + 1];
-                    int triIndex3 = triangles[i + 2];
+                    int v1 = triangles[i];
+                    int v2 = triangles[i + 1];
+                    int v3 = triangles[i + 2];
 
-                    startPoints[i] = new Vector2(sortedRectangles[triIndex1].transform.position.x + sortedRectangles[triIndex1].GetComponent<SpriteRenderer>().bounds.size.x / 2, sortedRectangles[triIndex1].transform.position.y + sortedRectangles[triIndex1].GetComponent<SpriteRenderer>().bounds.size.y / 2);
-                    endPoints[i] = new Vector2(sortedRectangles[triIndex2].transform.position.x + sortedRectangles[triIndex2].GetComponent<SpriteRenderer>().bounds.size.x / 2, sortedRectangles[triIndex2].transform.position.y + sortedRectangles[triIndex2].GetComponent<SpriteRenderer>().bounds.size.y / 2);
-                    Debug.Log("start1 pos: " + startPoints[i] + " end pos: " + endPoints[i]);
+                    if (!graph.ContainsKey(v1))
+                    {
+                        graph[v1] = new HashSet<int>();
+                    }
+                    if (!graph.ContainsKey(v2))
+                    {
+                        graph[v2] = new HashSet<int>();
+                    }
+                    if (!graph.ContainsKey(v3))
+                    {
+                        graph[v3] = new HashSet<int>();
+                    }
 
-                    startPoints[i + 1] = new Vector2(sortedRectangles[triIndex2].transform.position.x + sortedRectangles[triIndex2].GetComponent<SpriteRenderer>().bounds.size.x / 2, sortedRectangles[triIndex2].transform.position.y + sortedRectangles[triIndex2].GetComponent<SpriteRenderer>().bounds.size.y / 2);
-                    endPoints[i + 1] = new Vector2(sortedRectangles[triIndex3].transform.position.x + sortedRectangles[triIndex3].GetComponent<SpriteRenderer>().bounds.size.x / 2, sortedRectangles[triIndex3].transform.position.y + sortedRectangles[triIndex3].GetComponent<SpriteRenderer>().bounds.size.y / 2);
-                    Debug.Log("start2 pos: " + startPoints[i + 1] + " end pos: " + endPoints[i + 1]);
-
-                    startPoints[i + 2] = new Vector2(sortedRectangles[triIndex3].transform.position.x + sortedRectangles[triIndex3].GetComponent<SpriteRenderer>().bounds.size.x / 2, sortedRectangles[triIndex3].transform.position.y + sortedRectangles[triIndex3].GetComponent<SpriteRenderer>().bounds.size.y / 2);
-                    endPoints[i + 2] = new Vector2(sortedRectangles[triIndex1].transform.position.x + sortedRectangles[triIndex1].GetComponent<SpriteRenderer>().bounds.size.x / 2, sortedRectangles[triIndex1].transform.position.y + sortedRectangles[triIndex1].GetComponent<SpriteRenderer>().bounds.size.y / 2);
-                    Debug.Log("start3 pos: " + startPoints[i + 2] + " end pos: " + endPoints[i + 2]);
-
-                    Debug.Log("Triangle " + (i / 3 + 1) + ": " + triIndex1 + ", " + triIndex2 + ", " + triIndex3);
+                    graph[v1].Add(v2);
+                    graph[v1].Add(v3);
+                    graph[v2].Add(v1);
+                    graph[v2].Add(v3);
+                    graph[v3].Add(v1);
+                    graph[v3].Add(v2);
                 }
 
-                // Loop through the number of lines and create a LineRenderer component for each one
-                for (int i = 0; i < numLines; i++)
-                {
-                    // Create a new GameObject for the line
-                    GameObject lineObj = new GameObject("Line" + i);
-                    lineObj.transform.SetParent(transform); // Set the parent of the line object to the current object
+                Dictionary<int, HashSet<int>> minimalSpanningTree = GetMinimalSpanningTree(graph);
+                Dictionary<int, HashSet<int>> extraEdgesGraph = AddExtraEdges(graph, minimalSpanningTree, extraEdgesPercentage);
 
-                    // Add a LineRenderer component to the line object
+
+                int lineIndex = 0;
+                foreach (var nodePair in extraEdgesGraph)
+                {
+                    int fromNode = nodePair.Key;
+                    foreach (int toNode in nodePair.Value)
+                    {
+                        Vector2 startPoint = new Vector2(sortedRectangles[fromNode].transform.position.x + sortedRectangles[fromNode].GetComponent<SpriteRenderer>().bounds.size.x / 2, sortedRectangles[fromNode].transform.position.y + sortedRectangles[fromNode].GetComponent<SpriteRenderer>().bounds.size.y / 2);
+                        Vector2 endPoint = new Vector2(sortedRectangles[toNode].transform.position.x + sortedRectangles[toNode].GetComponent<SpriteRenderer>().bounds.size.x / 2, sortedRectangles[toNode].transform.position.y + sortedRectangles[toNode].GetComponent<SpriteRenderer>().bounds.size.y / 2);
+
+                        startPoints[lineIndex] = startPoint;
+                        endPoints[lineIndex] = endPoint;
+                        ++lineIndex;
+                    }
+                }
+                for (int i = 0; i < lineIndex; ++i)
+                {
+                    Debug.Log(startPoints[i]);
+
+                }
+                
+                for (int i = 0; i < lineIndex; i++)
+                {
+                    GameObject lineObj = new GameObject("Line" + i);
+                    lineObj.transform.SetParent(transform);
+
                     LineRenderer lineRenderer = lineObj.AddComponent<LineRenderer>();
 
-                    // Set the positions, color, and width of the line
                     lineRenderer.positionCount = 2;
                     lineRenderer.SetPosition(0, startPoints[i]);
                     lineRenderer.SetPosition(1, endPoints[i]);
@@ -198,14 +380,12 @@ public class DungeonGenerationScript : MonoBehaviour
                     lineRenderer.startWidth = lineWidth;
                     lineRenderer.endWidth = lineWidth;
 
-                    // Set the sorting layer and order of the line renderer
                     lineRenderer.sortingLayerName = sortingLayerName;
                     lineRenderer.sortingOrder = sortingOrder;
 
-                    // Add the LineRenderer component to the array
                     lineRenderers[i] = lineRenderer;
                 }
-
+                
 
             }
         }
