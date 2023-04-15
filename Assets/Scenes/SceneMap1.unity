@@ -877,18 +877,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 20e666d6e972ce1489a45b2f4a86952b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numRooms: 75
-  mainRoomsPercentage: 0.08
+  numRooms: 60
+  mainRoomsPercentage: 0.2
   extraEdgesPercentage: 0.15
-  aspectRatioWeight: 1230
+  aspectRatioWeight: 1150
+  chanceTileFloor01: 0.85
+  chanceTileFloor02: 0.95
   meanWidth: 8
   stdDevWidth: 5
-  minWidth: 5
-  maxWidth: 17
+  minWidth: 7
+  maxWidth: 15
   meanHeight: 8
   stdDevHeight: 5
-  minHeight: 5
-  maxHeight: 17
+  minHeight: 7
+  maxHeight: 15
   cellSize: 1
   color: {r: 1, g: 1, b: 1, a: 1}
   Map: {fileID: 1287944675}
@@ -896,7 +898,7 @@ MonoBehaviour:
   startPoints: []
   endPoints: []
   lineColor: {r: 0, g: 0, b: 1, a: 1}
-  lineWidth: 2
+  lineWidth: 0.3
   sortingLayerName: Default
   sortingOrder: 100
   tilemapFloor: {fileID: 1738476036}
@@ -918,6 +920,8 @@ MonoBehaviour:
   tileWallLowerCornerRight: {fileID: 11400000, guid: fe7018ded5f297b4bab7d37cbf54861a, type: 2}
   tileWallLeft: {fileID: 11400000, guid: d23c844c38405624580f37a3061b7699, type: 2}
   tileWallRight: {fileID: 11400000, guid: edcf2aa261f92f340a4da7baf62a4ef3, type: 2}
+  tileFloor02: {fileID: 11400000, guid: ee44b4e86b69b7748a4f1f6f7583f88e, type: 2}
+  tileFloor03: {fileID: 11400000, guid: deedf7bf51889324e98a289e2ac63c58, type: 2}
 --- !u!4 &352315195
 Transform:
   m_ObjectHideFlags: 0
@@ -1119,7 +1123,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 90
+  orthographic size: 40
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
