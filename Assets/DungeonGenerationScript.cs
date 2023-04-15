@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 using DelaunatorSharp;
 using DelaunatorSharp.Unity.Extensions;
 
@@ -9,6 +10,10 @@ public class DungeonGenerationScript : MonoBehaviour
     public int numRooms;
     public float mainRoomsPercentage = 0.08f;
     public float extraEdgesPercentage = 0.15f;
+    public float aspectRatioWeight = 0f;
+    public int meanWidth, stdDevWidth, minWidth, maxWidth;
+    public int meanHeight, stdDevHeight, minHeight, maxHeight;
+
     public float cellSize;
     public Color color = Color.white;
     public Grid Map;
@@ -21,15 +26,14 @@ public class DungeonGenerationScript : MonoBehaviour
     public Vector2[] startPoints;
     public Vector2[] endPoints;
     public Color lineColor = Color.blue;
-    public float lineWidth = 2f;
+    public float lineWidth = 1f;
     public string sortingLayerName = "Default";
     public int sortingOrder = 100;
-
     private LineRenderer[] lineRenderers;
-
-
-    [SerializeField] private Material material;
     private Delaunator delaunator;
+
+    public Tilemap tilemapFloor, tilemapFloorWalls, tilemapDecoratives, tilemapWalls;
+    public Tile tileFloor01, tileBricksLower01, tileBricksUpper01, tileWallUpper, tileWallUpperLeft, tileWallUpperRight, tileWallLower, tileWallLowerLeft, tileWallLowerRight, tileWallUpperCornerLeft, tileWallUpperCornerRight, tileWallLowerCornerLeft, tileWallLowerCornerRight, tileWallLeft, tileWallRight;
 
 
     Sprite CreateRectangleSprite(float width, float height)
@@ -151,8 +155,6 @@ public class DungeonGenerationScript : MonoBehaviour
         return minimalSpanningTree;
     }
 
-
-
     void Start()
     {
         cellSize = Map.cellSize[0] * 100;
@@ -164,20 +166,8 @@ public class DungeonGenerationScript : MonoBehaviour
 
         for (int i = 0; i < numRooms; i++)
         {
-            int meanWidth = 10;
-            int stdDevWidth = 8;
-            int minWidth = 5;
-            int maxWidth = 22;
-
             int width = Mathf.RoundToInt(Mathf.Clamp(UnityEngine.Random.Range(meanWidth - stdDevWidth, meanWidth + stdDevWidth + 1), minWidth, maxWidth));
-
-            int meanHeight = 11;
-            int stdDevHeight = 8;
-            int minHeight = 6;
-            int maxHeight = 23;
-
             int height = Mathf.RoundToInt(Mathf.Clamp(UnityEngine.Random.Range(meanHeight - stdDevHeight, meanHeight + stdDevHeight + 1), minHeight, maxHeight));
-
 
             GameObject rectangle = new GameObject("Rectangle" + i);
             SpriteRenderer spriteRenderer = rectangle.AddComponent<SpriteRenderer>();
@@ -286,8 +276,16 @@ public class DungeonGenerationScript : MonoBehaviour
                     sortedRectangles.Add(rb.gameObject);
                 }
 
-                sortedRectangles.Sort((r1, r2) => r2.GetComponent<SpriteRenderer>().sprite.texture.width * r2.GetComponent<SpriteRenderer>().sprite.texture.height -
-                                                r1.GetComponent<SpriteRenderer>().sprite.texture.width * r1.GetComponent<SpriteRenderer>().sprite.texture.height);
+                sortedRectangles.Sort((r1, r2) =>
+                {
+                    Rect rect1 = r1.GetComponent<SpriteRenderer>().sprite.textureRect;
+                    Rect rect2 = r2.GetComponent<SpriteRenderer>().sprite.textureRect;
+
+                    float weightedArea1 = (rect1.width * rect1.height) + aspectRatioWeight * Mathf.Abs(rect1.width - rect1.height);
+                    float weightedArea2 = (rect2.width * rect2.height) + aspectRatioWeight * Mathf.Abs(rect2.width - rect2.height);
+
+                    return weightedArea2.CompareTo(weightedArea1);
+                });
 
                 int numRectanglesToChange = Mathf.CeilToInt(sortedRectangles.Count * mainRoomsPercentage);
 
@@ -362,9 +360,86 @@ public class DungeonGenerationScript : MonoBehaviour
                 for (int i = 0; i < lineIndex; ++i)
                 {
                     Debug.Log(startPoints[i]);
-
                 }
-                
+
+                //PAINT TILES
+                int roomsToDraw = numRectanglesToChange;
+                foreach (GameObject rectangle in sortedRectangles)
+                {
+                    if (roomsToDraw <= 0) break;
+                    --roomsToDraw;
+
+                    Rigidbody2D rb = rectangle.GetComponent<Rigidbody2D>();
+                    Vector3Int startPos = tilemapFloor.WorldToCell(rb.position);
+
+                    Vector3 tileSize = tilemapFloor.cellSize;
+                    Vector3Int sizeInTiles = new Vector3Int(
+                        Mathf.RoundToInt(rb.GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
+                        Mathf.RoundToInt(rb.GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
+                        1);
+
+                    //Floor
+                    for (int i = 0; i < sizeInTiles.x; ++i)
+                    {
+                        for (int j = 2; j < sizeInTiles.y - 1; ++j)
+                        {
+                            Vector3Int tilePos = startPos + new Vector3Int(i, j, 0);
+                            tilemapFloor.SetTile(tilePos, tileFloor01);
+                        }
+                    }
+
+                    //FloorWalls
+                    for (int i = 1; i < sizeInTiles.x - 1; ++i)
+                    {
+                        Vector3Int tilePos = startPos + new Vector3Int(i, sizeInTiles.y - 1, 0);
+                        tilemapFloorWalls.SetTile(tilePos, tileBricksUpper01);
+
+                        tilePos = startPos + new Vector3Int(i, sizeInTiles.y, 0);
+                        tilemapFloorWalls.SetTile(tilePos, tileWallUpper);
+                    }
+                    Vector3Int tilePos2 = startPos + new Vector3Int(0, sizeInTiles.y - 1, 0);
+                    tilemapFloorWalls.SetTile(tilePos2, tileWallUpperCornerLeft);
+                    tilePos2 = startPos + new Vector3Int(0, sizeInTiles.y, 0);
+                    tilemapFloorWalls.SetTile(tilePos2, tileWallUpperLeft);
+                    tilePos2 = startPos + new Vector3Int(sizeInTiles.x - 1, sizeInTiles.y - 1, 0);
+                    tilemapFloorWalls.SetTile(tilePos2, tileWallUpperCornerRight);
+                    tilePos2 = startPos + new Vector3Int(sizeInTiles.x - 1, sizeInTiles.y, 0);
+                    tilemapFloorWalls.SetTile(tilePos2, tileWallUpperRight);
+
+                    //Walls
+                    for (int j = 1; j < sizeInTiles.y; ++j)
+                    {
+                        Vector3Int tilePos = startPos + new Vector3Int(0, j, 0);
+                        tilemapWalls.SetTile(tilePos, tileWallLeft);
+
+                        tilePos = startPos + new Vector3Int(sizeInTiles.x - 1, j, 0);
+                        tilemapWalls.SetTile(tilePos, tileWallRight);
+                    }
+                    for (int i = 1; i < sizeInTiles.x - 1; ++i)
+                    {
+                        Vector3Int tilePos = startPos + new Vector3Int(i, 1, 0);
+                        tilemapFloorWalls.SetTile(tilePos, tileBricksLower01);
+
+                        tilePos = startPos + new Vector3Int(i, 2, 0);
+                        tilemapWalls.SetTile(tilePos, tileWallLower);
+                    }
+                    tilePos2 = startPos + new Vector3Int(0, 1, 0);
+                    tilemapWalls.SetTile(tilePos2, tileWallLowerCornerLeft);
+                    tilePos2 = startPos + new Vector3Int(0, 2, 0);
+                    tilemapWalls.SetTile(tilePos2, tileWallLowerLeft);
+                    tilePos2 = startPos + new Vector3Int(sizeInTiles.x - 1, 1, 0);
+                    tilemapWalls.SetTile(tilePos2, tileWallLowerCornerRight);
+                    tilePos2 = startPos + new Vector3Int(sizeInTiles.x - 1, 2, 0);
+                    tilemapWalls.SetTile(tilePos2, tileWallLowerRight);
+                }
+
+                //DEACTIVATE ROOM RECTANGLES
+                foreach (GameObject rectangle in rectangles)
+                {
+                    rectangle.SetActive(false);
+                }
+
+                //DEBUG LINES
                 for (int i = 0; i < lineIndex; i++)
                 {
                     GameObject lineObj = new GameObject("Line" + i);
@@ -385,7 +460,6 @@ public class DungeonGenerationScript : MonoBehaviour
 
                     lineRenderers[i] = lineRenderer;
                 }
-                
 
             }
         }
