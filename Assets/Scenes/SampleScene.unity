@@ -152,6 +152,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 435064f34d9722145b6d9fc5018384a0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  maxSlots: 10
   itemContent: {fileID: 331535656}
   itemSlotPrefab: {fileID: 8286688120060556068, guid: 4f3a79e8c200bfb4cac017b9c5b6fb12, type: 3}
   enableRemove: {fileID: 2128426246}
