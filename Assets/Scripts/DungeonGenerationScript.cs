@@ -34,7 +34,7 @@ public class DungeonGenerationScript : MonoBehaviour
     private Delaunator delaunator;
 
     public Tilemap tilemapFloor, tilemapFloorWalls, tilemapDecoratives, tilemapWalls;
-    public Tile tileFloor01, tileBricks01, tileWallUpper, tileWallUpperLeft, tileWallUpperRight, tileWallLowerLeft, tileWallLowerRight, tileWallUpperCornerLeft, tileWallUpperCornerRight, tileWallLowerCornerLeft, tileWallLowerCornerRight, tileWallLeft, tileWallRight;
+    public Tile tileFloor01, tileBricks01, tileWallUpper, tileWallUpperLeft, tileWallUpperRight, tileWallLowerLeft, tileWallLowerRight, tileWallLeft, tileWallRight;
     public Tile tileFloor02, tileFloor03;
 
     Sprite CreateRectangleSprite(float width, float height)
@@ -437,6 +437,16 @@ public class DungeonGenerationScript : MonoBehaviour
                         tilePos = startPos + new Vector3Int(i, 2, 0);
                         tilemapWalls.SetTile(tilePos, tileWallUpper);
                     }
+
+                    tilePos2 = startPos + new Vector3Int(0, sizeInTiles.y, 0);
+                    tilemapWalls.SetTile(tilePos2, tileWallUpperLeft);
+                    tilePos2 = startPos + new Vector3Int(sizeInTiles.x - 1, sizeInTiles.y, 0);
+                    tilemapWalls.SetTile(tilePos2, tileWallUpperRight);
+
+                    tilePos2 = startPos + new Vector3Int(0, 1, 0);
+                    tilemapWalls.SetTile(tilePos2, tileWallLowerLeft);
+                    tilePos2 = startPos + new Vector3Int(sizeInTiles.x - 1, 1, 0);
+                    tilemapWalls.SetTile(tilePos2, tileWallLowerRight);
                 }
 
                 //GENERATE HALLWAYS
@@ -583,9 +593,9 @@ public class DungeonGenerationScript : MonoBehaviour
                         {
                             if (startPos1.y <= startPos2.y)
                             {
-                                if (startPos2.y < startPos1.y + sizeInTiles1.y - 4)
+                                if (startPos2.y < startPos1.y + sizeInTiles1.y - 5)
                                 {
-                                    for (int i = 1; i <= startPos2.x - startPos1.x - sizeInTiles1.x; ++i)
+                                    for (int i = 0; i <= startPos2.x - startPos1.x - sizeInTiles1.x + 1; ++i)
                                     {
                                         Vector3Int tilePos = startPos2 + new Vector3Int(i * -1, 3, 0);
                                         TileBase tileToPaint = getRandomTileFloor();
@@ -597,9 +607,9 @@ public class DungeonGenerationScript : MonoBehaviour
                             }
                             else if (startPos1.y > startPos2.y)
                             {
-                                if (startPos1.y < startPos2.y + sizeInTiles2.y - 4)
+                                if (startPos1.y < startPos2.y + sizeInTiles2.y - 5)
                                 {
-                                    for (int i = 1; i <= startPos2.x - startPos1.x - sizeInTiles1.x; ++i)
+                                    for (int i = 0; i <= startPos2.x - startPos1.x - sizeInTiles1.x + 1; ++i)
                                     {
                                         Vector3Int tilePos = startPos1 + new Vector3Int(i + sizeInTiles1.x - 1, 3, 0);
                                         TileBase tileToPaint = getRandomTileFloor();
@@ -614,7 +624,7 @@ public class DungeonGenerationScript : MonoBehaviour
                         {
                             if (startPos1.x <= startPos2.x)
                             {
-                                if (startPos2.x < startPos1.x + sizeInTiles1.x - 4)
+                                if (startPos2.x < startPos1.x + sizeInTiles1.x - 5)
                                 {
                                     for (int i = 0; i <= startPos2.y - startPos1.y - sizeInTiles1.y + 1; ++i)
                                     {
@@ -628,7 +638,7 @@ public class DungeonGenerationScript : MonoBehaviour
                             }
                             else if (startPos1.x > startPos2.x)
                             {
-                                if (startPos1.x < startPos2.x + sizeInTiles2.x - 4)
+                                if (startPos1.x < startPos2.x + sizeInTiles2.x - 5)
                                 {
                                     for (int i = 0; i <= startPos2.y - startPos1.y - sizeInTiles1.y + 1; ++i)
                                     {

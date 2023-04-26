@@ -1586,14 +1586,10 @@ MonoBehaviour:
   tileFloor01: {fileID: 11400000, guid: 845003b384595824e90f806f8ee4b0bd, type: 2}
   tileBricks01: {fileID: 11400000, guid: d44c5948603fdbb41b54b75d41ab40aa, type: 2}
   tileWallUpper: {fileID: 11400000, guid: 82bcad3fd099d5640a340cbd974d7dcb, type: 2}
-  tileWallUpperLeft: {fileID: 11400000, guid: 4a22731eb2e265543b807f8745e59ef3, type: 2}
-  tileWallUpperRight: {fileID: 11400000, guid: 0e803c3b3a44df6488319e0d54d4d680, type: 2}
-  tileWallLowerLeft: {fileID: 11400000, guid: 6454f8679e89b4a4db8c4761a82533ed, type: 2}
-  tileWallLowerRight: {fileID: 11400000, guid: 1abd1667a51766b469d8c6af1c2346f8, type: 2}
-  tileWallUpperCornerLeft: {fileID: 11400000, guid: 6d6921665bf2903468e1b15064bfd24e, type: 2}
-  tileWallUpperCornerRight: {fileID: 11400000, guid: 513da9229928abf4a861d48e372b94df, type: 2}
-  tileWallLowerCornerLeft: {fileID: 11400000, guid: 02769005ae3f5a046ad9e0d54b417b01, type: 2}
-  tileWallLowerCornerRight: {fileID: 11400000, guid: fe7018ded5f297b4bab7d37cbf54861a, type: 2}
+  tileWallUpperLeft: {fileID: 11400000, guid: 81ca8e0b4d60c9545a9ec056f0c1ae67, type: 2}
+  tileWallUpperRight: {fileID: 11400000, guid: 7d25c034d9cdbd64d98c80c5e957512c, type: 2}
+  tileWallLowerLeft: {fileID: 11400000, guid: 8da087e6349f3f94492f0fa294466c9b, type: 2}
+  tileWallLowerRight: {fileID: 11400000, guid: 2895b709a36b7cf42ab53695ec789ad9, type: 2}
   tileWallLeft: {fileID: 11400000, guid: edcf2aa261f92f340a4da7baf62a4ef3, type: 2}
   tileWallRight: {fileID: 11400000, guid: d23c844c38405624580f37a3061b7699, type: 2}
   tileFloor02: {fileID: 11400000, guid: ee44b4e86b69b7748a4f1f6f7583f88e, type: 2}
