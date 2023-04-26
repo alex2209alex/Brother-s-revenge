@@ -36,6 +36,8 @@ public class DungeonGenerationScript : MonoBehaviour
     public Tilemap tilemapFloor, tilemapFloorWalls, tilemapDecoratives, tilemapWalls;
     public Tile tileFloor01, tileBricks01, tileWallUpper, tileWallUpperLeft, tileWallUpperRight, tileWallLowerLeft, tileWallLowerRight, tileWallLeft, tileWallRight;
     public Tile tileFloor02, tileFloor03;
+    public Tile tileCornerUpperLeft, tileCornerUpperRight, tileCornerLowerLeft, tileCornerLowerRight, tileCorner02LowerLeft, tileCorner02LowerRight;
+    public Tile tileBricks02, tileBricks03;
 
     Sprite CreateRectangleSprite(float width, float height)
     {
@@ -416,7 +418,7 @@ public class DungeonGenerationScript : MonoBehaviour
                         tilemapFloorWalls.SetTile(tilePos, tileBricks01);
 
                         tilePos = startPos + new Vector3Int(i, sizeInTiles.y, 0);
-                        tilemapFloorWalls.SetTile(tilePos, tileWallUpper);
+                        tilemapWalls.SetTile(tilePos, tileWallUpper);
                     }
                     Vector3Int tilePos2 = startPos + new Vector3Int(0, sizeInTiles.y - 1, 0);
 
@@ -495,7 +497,66 @@ public class DungeonGenerationScript : MonoBehaviour
                                         tilePos = startPos2 + new Vector3Int(i * -1, 4, 0);
                                         tileToPaint = getRandomTileFloor();
                                         tilemapFloor.SetTile(tilePos, tileToPaint);
+
+                                        tilePos = startPos2 + new Vector3Int(i * -1, 3, 0);
+                                        tileToPaint = tileWallUpper;
+                                        tilemapWalls.SetTile(tilePos, tileToPaint);
+
+                                        tilePos = startPos2 + new Vector3Int(i * -1, 6, 0);
+                                        tileToPaint = tileWallUpper;
+                                        tilemapWalls.SetTile(tilePos, tileToPaint);
+
+                                        tilePos = startPos2 + new Vector3Int(i * -1, 5, 0);
+                                        tileToPaint = tileBricks01;
+                                        tilemapFloorWalls.SetTile(tilePos, tileToPaint);
+
+                                        tilePos = startPos2 + new Vector3Int(i * -1, 2, 0);
+                                        tileToPaint = tileBricks01;
+                                        tilemapWalls.SetTile(tilePos, tileToPaint);
                                     }
+
+                                    Vector3Int tilePos2 = startPos2 + new Vector3Int(0, 6, 0);
+                                    TileBase tileToPaint2 = tileCornerUpperLeft;
+                                    tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                    tilePos2 = startPos2 + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 6, 0);
+                                    tileToPaint2 = tileCornerUpperRight;
+                                    tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                    tilePos2 = startPos2 + new Vector3Int(0, 5, 0);
+                                    tilemapWalls.SetTile(tilePos2, null);
+                                    tilePos2 = startPos2 + new Vector3Int(0, 4, 0);
+                                    tilemapWalls.SetTile(tilePos2, null);
+
+                                    tilePos2 = startPos2 + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 5, 0);
+                                    tilemapWalls.SetTile(tilePos2, null);
+                                    tilePos2 = startPos2 + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 4, 0);
+                                    tilemapWalls.SetTile(tilePos2, null);
+
+                                    tilePos2 = startPos2 + new Vector3Int(0, 5, 0);
+                                    tileToPaint2 = tileBricks03;
+                                    tilemapFloorWalls.SetTile(tilePos2, tileToPaint2);
+
+                                    tilePos2 = startPos2 + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 5, 0);
+                                    tileToPaint2 = tileBricks02;
+                                    tilemapFloorWalls.SetTile(tilePos2, tileToPaint2);
+
+                                    tilePos2 = startPos2 + new Vector3Int(0, 2, 0);
+                                    tileToPaint2 = tileCornerLowerRight;
+                                    tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                    tilePos2 = startPos2 + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 2, 0);
+                                    tileToPaint2 = tileCornerLowerLeft;
+                                    tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                    tilePos2 = startPos2 + new Vector3Int(0, 3, 0);
+                                    tileToPaint2 = tileCorner02LowerRight;
+                                    tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                    tilePos2 = startPos2 + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 3, 0);
+                                    tileToPaint2 = tileCorner02LowerLeft;
+                                    tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
                                     nodePairs.Add($"{fromNode},{toNode}");
                                     continue;
                                 }
@@ -512,6 +573,14 @@ public class DungeonGenerationScript : MonoBehaviour
                                         tilePos = startPos1 + new Vector3Int(i + sizeInTiles1.x - 1, 4, 0);
                                         tileToPaint = getRandomTileFloor();
                                         tilemapFloor.SetTile(tilePos, tileToPaint);
+
+                                        tilePos = startPos2 + new Vector3Int(i + sizeInTiles1.x - 1, 3, 0);
+                                        tileToPaint = tileWallUpper;
+                                        tilemapWalls.SetTile(tilePos, tileToPaint);
+
+                                        tilePos = startPos2 + new Vector3Int(i + sizeInTiles1.x - 1, 5, 0);
+                                        tileToPaint = tileWallUpper;
+                                        tilemapFloorWalls.SetTile(tilePos, tileToPaint);
                                     }
                                     nodePairs.Add($"{fromNode},{toNode}");
                                     continue;
