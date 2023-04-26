@@ -34,7 +34,7 @@ public class DungeonGenerationScript : MonoBehaviour
     private Delaunator delaunator;
 
     public Tilemap tilemapFloor, tilemapFloorWalls, tilemapDecoratives, tilemapWalls;
-    public Tile tileFloor01, tileBricksLower01, tileBricksUpper01, tileWallUpper, tileWallUpperLeft, tileWallUpperRight, tileWallLower, tileWallLowerLeft, tileWallLowerRight, tileWallUpperCornerLeft, tileWallUpperCornerRight, tileWallLowerCornerLeft, tileWallLowerCornerRight, tileWallLeft, tileWallRight;
+    public Tile tileFloor01, tileBricks01, tileWallUpper, tileWallUpperLeft, tileWallUpperRight, tileWallLowerLeft, tileWallLowerRight, tileWallUpperCornerLeft, tileWallUpperCornerRight, tileWallLowerCornerLeft, tileWallLowerCornerRight, tileWallLeft, tileWallRight;
     public Tile tileFloor02, tileFloor03;
 
     Sprite CreateRectangleSprite(float width, float height)
@@ -399,7 +399,7 @@ public class DungeonGenerationScript : MonoBehaviour
                         1);
 
                     //Floor
-                    for (int i = 0; i < sizeInTiles.x; ++i)
+                    for (int i = 1; i < sizeInTiles.x - 1; ++i)
                     {
                         for (int j = 2; j < sizeInTiles.y - 1; ++j)
                         {
@@ -413,22 +413,15 @@ public class DungeonGenerationScript : MonoBehaviour
                     for (int i = 1; i < sizeInTiles.x - 1; ++i)
                     {
                         Vector3Int tilePos = startPos + new Vector3Int(i, sizeInTiles.y - 1, 0);
-                        tilemapFloorWalls.SetTile(tilePos, tileBricksUpper01);
+                        tilemapFloorWalls.SetTile(tilePos, tileBricks01);
 
                         tilePos = startPos + new Vector3Int(i, sizeInTiles.y, 0);
                         tilemapFloorWalls.SetTile(tilePos, tileWallUpper);
                     }
                     Vector3Int tilePos2 = startPos + new Vector3Int(0, sizeInTiles.y - 1, 0);
-                    tilemapFloorWalls.SetTile(tilePos2, tileWallUpperCornerLeft);
-                    tilePos2 = startPos + new Vector3Int(0, sizeInTiles.y, 0);
-                    tilemapFloorWalls.SetTile(tilePos2, tileWallUpperLeft);
-                    tilePos2 = startPos + new Vector3Int(sizeInTiles.x - 1, sizeInTiles.y - 1, 0);
-                    tilemapFloorWalls.SetTile(tilePos2, tileWallUpperCornerRight);
-                    tilePos2 = startPos + new Vector3Int(sizeInTiles.x - 1, sizeInTiles.y, 0);
-                    tilemapFloorWalls.SetTile(tilePos2, tileWallUpperRight);
 
                     //Walls
-                    for (int j = 1; j < sizeInTiles.y; ++j)
+                    for (int j = 2; j < sizeInTiles.y; ++j)
                     {
                         Vector3Int tilePos = startPos + new Vector3Int(0, j, 0);
                         tilemapWalls.SetTile(tilePos, tileWallLeft);
@@ -439,19 +432,11 @@ public class DungeonGenerationScript : MonoBehaviour
                     for (int i = 1; i < sizeInTiles.x - 1; ++i)
                     {
                         Vector3Int tilePos = startPos + new Vector3Int(i, 1, 0);
-                        tilemapWalls.SetTile(tilePos, tileBricksLower01);
+                        tilemapWalls.SetTile(tilePos, tileBricks01);
 
                         tilePos = startPos + new Vector3Int(i, 2, 0);
-                        tilemapWalls.SetTile(tilePos, tileWallLower);
+                        tilemapWalls.SetTile(tilePos, tileWallUpper);
                     }
-                    tilePos2 = startPos + new Vector3Int(0, 1, 0);
-                    tilemapWalls.SetTile(tilePos2, tileWallLowerCornerLeft);
-                    tilePos2 = startPos + new Vector3Int(0, 2, 0);
-                    tilemapWalls.SetTile(tilePos2, tileWallLowerLeft);
-                    tilePos2 = startPos + new Vector3Int(sizeInTiles.x - 1, 1, 0);
-                    tilemapWalls.SetTile(tilePos2, tileWallLowerCornerRight);
-                    tilePos2 = startPos + new Vector3Int(sizeInTiles.x - 1, 2, 0);
-                    tilemapWalls.SetTile(tilePos2, tileWallLowerRight);
                 }
 
                 //GENERATE HALLWAYS
@@ -491,7 +476,7 @@ public class DungeonGenerationScript : MonoBehaviour
                             {
                                 if (startPos2.y < startPos1.y + sizeInTiles1.y - 6)
                                 {
-                                    for (int i = 1; i <= startPos2.x - startPos1.x - sizeInTiles1.x; ++i)
+                                    for (int i = 0; i <= startPos2.x - startPos1.x - sizeInTiles1.x + 1; ++i)
                                     {
                                         Vector3Int tilePos = startPos2 + new Vector3Int(i * -1, 3, 0);
                                         TileBase tileToPaint = getRandomTileFloor();
@@ -508,7 +493,7 @@ public class DungeonGenerationScript : MonoBehaviour
                             {
                                 if (startPos1.y < startPos2.y + sizeInTiles2.y - 6)
                                 {
-                                    for (int i = 1; i <= startPos2.x - startPos1.x - sizeInTiles1.x; ++i)
+                                    for (int i = 0; i <= startPos2.x - startPos1.x - sizeInTiles1.x + 1; ++i)
                                     {
                                         Vector3Int tilePos = startPos1 + new Vector3Int(i + sizeInTiles1.x - 1, 3, 0);
                                         TileBase tileToPaint = getRandomTileFloor();
