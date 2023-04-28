@@ -1104,6 +1104,7 @@ MonoBehaviour:
   visionDistance: 7
   attackDistance: 0
   damage: 5
+  attackCooldown: 10
   playerHP: {fileID: 1866138081}
 --- !u!114 &737725499
 MonoBehaviour:
