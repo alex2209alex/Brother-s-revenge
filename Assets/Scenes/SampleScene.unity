@@ -1080,8 +1080,7 @@ GameObject:
   - component: {fileID: 737725502}
   - component: {fileID: 737725501}
   - component: {fileID: 737725500}
-  - component: {fileID: 737725499}
-  - component: {fileID: 737725498}
+  - component: {fileID: 737725504}
   m_Layer: 0
   m_Name: Square
   m_TagString: Untagged
@@ -1089,39 +1088,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &737725498
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 737725497}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: db85c6bfcac78c34b9a0587c20c9b66f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  visionDistance: 7
-  attackDistance: 0
-  damage: 5
-  attackCooldown: 10
-  playerHP: {fileID: 1866138081}
---- !u!114 &737725499
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 737725497}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3e9629c8dd1ec1b46a929c97f0e59dda, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  aIMeleeAttack: {fileID: 737725498}
-  player: {fileID: 1866138079}
-  speed: 1
-  distanceBetween: 0
 --- !u!61 &737725500
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1236,6 +1202,26 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 12
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &737725504
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 737725497}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3893b60fd9615c245bf7629d2b82e420, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerGO: {fileID: 1866138079}
+  player: {fileID: 1866138089}
+  maxHP: 0
+  currentHP: 0
+  movementSpeed: 0
+  visionRange: 0
+  attackRange: 0
+  damage: 0
 --- !u!1001 &772107129
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3354,11 +3340,10 @@ GameObject:
   - component: {fileID: 1866138087}
   - component: {fileID: 1866138086}
   - component: {fileID: 1866138085}
-  - component: {fileID: 1866138084}
   - component: {fileID: 1866138083}
   - component: {fileID: 1866138082}
-  - component: {fileID: 1866138081}
   - component: {fileID: 1866138080}
+  - component: {fileID: 1866138089}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -3378,19 +3363,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9dd5ede9549b3d1429924a9d882d535d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &1866138081
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1866138079}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9cb4a9b90c966e24cb73a106b060d483, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  currentHP: 0
 --- !u!95 &1866138082
 Animator:
   serializedVersion: 5
@@ -3438,19 +3410,6 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.5, y: 0.2}
   m_EdgeRadius: 0.1
---- !u!114 &1866138084
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1866138079}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 02d64fa7a0d50be4b83a8b2313c4655a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  speed: 8
 --- !u!114 &1866138085
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3569,6 +3528,23 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 13
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1866138089
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1866138079}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83bd380aaca15bf45ae1be44eaa5a3fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHP: 0
+  currentHP: 0
+  meleeAttackRange: 0
+  meleeDamage: 0
+  movementSpeed: 0
 --- !u!1 &1872046892
 GameObject:
   m_ObjectHideFlags: 0
