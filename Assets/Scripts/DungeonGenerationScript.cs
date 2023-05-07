@@ -34,8 +34,10 @@ public class DungeonGenerationScript : MonoBehaviour
     private Delaunator delaunator;
 
     public Tilemap tilemapFloor, tilemapFloorWalls, tilemapDecoratives, tilemapWalls;
-    public Tile tileFloor01, tileBricksLower01, tileBricksUpper01, tileWallUpper, tileWallUpperLeft, tileWallUpperRight, tileWallLower, tileWallLowerLeft, tileWallLowerRight, tileWallUpperCornerLeft, tileWallUpperCornerRight, tileWallLowerCornerLeft, tileWallLowerCornerRight, tileWallLeft, tileWallRight;
+    public Tile tileFloor01, tileBricks01, tileWallUpper, tileWallUpperLeft, tileWallUpperRight, tileWallLowerLeft, tileWallLowerRight, tileWallLeft, tileWallRight;
     public Tile tileFloor02, tileFloor03;
+    public Tile tileCornerUpperLeft, tileCornerUpperRight, tileCornerLowerLeft, tileCornerLowerRight, tileCorner02LowerLeft, tileCorner02LowerRight;
+    public Tile tileBricks02, tileBricks03;
 
     Sprite CreateRectangleSprite(float width, float height)
     {
@@ -399,7 +401,7 @@ public class DungeonGenerationScript : MonoBehaviour
                         1);
 
                     //Floor
-                    for (int i = 0; i < sizeInTiles.x; ++i)
+                    for (int i = 1; i < sizeInTiles.x - 1; ++i)
                     {
                         for (int j = 2; j < sizeInTiles.y - 1; ++j)
                         {
@@ -413,22 +415,15 @@ public class DungeonGenerationScript : MonoBehaviour
                     for (int i = 1; i < sizeInTiles.x - 1; ++i)
                     {
                         Vector3Int tilePos = startPos + new Vector3Int(i, sizeInTiles.y - 1, 0);
-                        tilemapFloorWalls.SetTile(tilePos, tileBricksUpper01);
+                        tilemapFloorWalls.SetTile(tilePos, tileBricks01);
 
                         tilePos = startPos + new Vector3Int(i, sizeInTiles.y, 0);
-                        tilemapFloorWalls.SetTile(tilePos, tileWallUpper);
+                        tilemapWalls.SetTile(tilePos, tileWallUpper);
                     }
                     Vector3Int tilePos2 = startPos + new Vector3Int(0, sizeInTiles.y - 1, 0);
-                    tilemapFloorWalls.SetTile(tilePos2, tileWallUpperCornerLeft);
-                    tilePos2 = startPos + new Vector3Int(0, sizeInTiles.y, 0);
-                    tilemapFloorWalls.SetTile(tilePos2, tileWallUpperLeft);
-                    tilePos2 = startPos + new Vector3Int(sizeInTiles.x - 1, sizeInTiles.y - 1, 0);
-                    tilemapFloorWalls.SetTile(tilePos2, tileWallUpperCornerRight);
-                    tilePos2 = startPos + new Vector3Int(sizeInTiles.x - 1, sizeInTiles.y, 0);
-                    tilemapFloorWalls.SetTile(tilePos2, tileWallUpperRight);
 
                     //Walls
-                    for (int j = 1; j < sizeInTiles.y; ++j)
+                    for (int j = 2; j < sizeInTiles.y; ++j)
                     {
                         Vector3Int tilePos = startPos + new Vector3Int(0, j, 0);
                         tilemapWalls.SetTile(tilePos, tileWallLeft);
@@ -439,18 +434,20 @@ public class DungeonGenerationScript : MonoBehaviour
                     for (int i = 1; i < sizeInTiles.x - 1; ++i)
                     {
                         Vector3Int tilePos = startPos + new Vector3Int(i, 1, 0);
-                        tilemapWalls.SetTile(tilePos, tileBricksLower01);
+                        tilemapWalls.SetTile(tilePos, tileBricks01);
 
                         tilePos = startPos + new Vector3Int(i, 2, 0);
-                        tilemapWalls.SetTile(tilePos, tileWallLower);
+                        tilemapWalls.SetTile(tilePos, tileWallUpper);
                     }
+
+                    tilePos2 = startPos + new Vector3Int(0, sizeInTiles.y, 0);
+                    tilemapWalls.SetTile(tilePos2, tileWallUpperLeft);
+                    tilePos2 = startPos + new Vector3Int(sizeInTiles.x - 1, sizeInTiles.y, 0);
+                    tilemapWalls.SetTile(tilePos2, tileWallUpperRight);
+
                     tilePos2 = startPos + new Vector3Int(0, 1, 0);
-                    tilemapWalls.SetTile(tilePos2, tileWallLowerCornerLeft);
-                    tilePos2 = startPos + new Vector3Int(0, 2, 0);
                     tilemapWalls.SetTile(tilePos2, tileWallLowerLeft);
                     tilePos2 = startPos + new Vector3Int(sizeInTiles.x - 1, 1, 0);
-                    tilemapWalls.SetTile(tilePos2, tileWallLowerCornerRight);
-                    tilePos2 = startPos + new Vector3Int(sizeInTiles.x - 1, 2, 0);
                     tilemapWalls.SetTile(tilePos2, tileWallLowerRight);
                 }
 
@@ -461,9 +458,6 @@ public class DungeonGenerationScript : MonoBehaviour
                     int fromNode = nodePair.Key;
                     foreach (int toNode in nodePair.Value)
                     {
-                        //startPoint
-                        //endPoint
-
                         if (nodePairs.Contains($"{toNode},{fromNode}"))
                         {
                             continue;
@@ -487,173 +481,183 @@ public class DungeonGenerationScript : MonoBehaviour
 
                         if (startPos1.x < startPos2.x)
                         {
-                            if (startPos1.y <= startPos2.y)
+                            bool case_orientation = true;
+                            if (startPos1.y > startPos2.y)
                             {
-                                if (startPos2.y < startPos1.y + sizeInTiles1.y - 6)
-                                {
-                                    for (int i = 1; i <= startPos2.x - startPos1.x - sizeInTiles1.x; ++i)
-                                    {
-                                        Vector3Int tilePos = startPos2 + new Vector3Int(i * -1, 3, 0);
-                                        TileBase tileToPaint = getRandomTileFloor();
-                                        tilemapFloor.SetTile(tilePos, tileToPaint);
+                                case_orientation = false;
+                            }
 
-                                        tilePos = startPos2 + new Vector3Int(i * -1, 4, 0);
-                                        tileToPaint = getRandomTileFloor();
-                                        tilemapFloor.SetTile(tilePos, tileToPaint);
-                                    }
-                                    nodePairs.Add($"{fromNode},{toNode}");
-                                    continue;
-                                }
-                            } else if (startPos1.y > startPos2.y)
+                            if ((case_orientation && startPos1.y <= startPos2.y && startPos2.y < startPos1.y + sizeInTiles1.y - 6) || (!case_orientation && startPos1.y > startPos2.y && startPos1.y < startPos2.y + sizeInTiles2.y - 6))
                             {
-                                if (startPos1.y < startPos2.y + sizeInTiles2.y - 6)
-                                {
-                                    for (int i = 1; i <= startPos2.x - startPos1.x - sizeInTiles1.x; ++i)
-                                    {
-                                        Vector3Int tilePos = startPos1 + new Vector3Int(i + sizeInTiles1.x - 1, 3, 0);
-                                        TileBase tileToPaint = getRandomTileFloor();
-                                        tilemapFloor.SetTile(tilePos, tileToPaint);
+                                Vector3Int startPosOffset = case_orientation ? startPos2 : startPos1;
+                                int startPosOffsetExtra = case_orientation ? 0: startPos2.x - startPos1.x;
 
-                                        tilePos = startPos1 + new Vector3Int(i + sizeInTiles1.x - 1, 4, 0);
-                                        tileToPaint = getRandomTileFloor();
-                                        tilemapFloor.SetTile(tilePos, tileToPaint);
-                                    }
-                                    nodePairs.Add($"{fromNode},{toNode}");
-                                    continue;
+                                for (int i = 0; i <= startPos2.x - startPos1.x - sizeInTiles1.x + 1; ++i)
+                                {
+                                    int offset = case_orientation ? i * -1 : i + sizeInTiles1.x - 1;
+
+                                    Vector3Int tilePos = startPosOffset + new Vector3Int(offset, 3, 0);
+                                    TileBase tileToPaint = getRandomTileFloor();
+                                    tilemapFloor.SetTile(tilePos, tileToPaint);
+
+                                    tilePos = startPosOffset + new Vector3Int(offset, 4, 0);
+                                    tileToPaint = getRandomTileFloor();
+                                    tilemapFloor.SetTile(tilePos, tileToPaint);
+
+                                    tilePos = startPosOffset + new Vector3Int(offset, 3, 0);
+                                    tileToPaint = tileWallUpper;
+                                    tilemapWalls.SetTile(tilePos, tileToPaint);
+
+                                    tilePos = startPosOffset + new Vector3Int(offset, 6, 0);
+                                    tileToPaint = tileWallUpper;
+                                    tilemapWalls.SetTile(tilePos, tileToPaint);
+
+                                    tilePos = startPosOffset + new Vector3Int(offset, 5, 0);
+                                    tileToPaint = tileBricks01;
+                                    tilemapFloorWalls.SetTile(tilePos, tileToPaint);
+
+                                    tilePos = startPosOffset + new Vector3Int(offset, 2, 0);
+                                    tileToPaint = tileBricks01;
+                                    tilemapWalls.SetTile(tilePos, tileToPaint);
                                 }
+
+                                Vector3Int tilePos2 = startPosOffset + new Vector3Int(0, 6, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                                TileBase tileToPaint2 = tileCornerUpperLeft;
+                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                tilePos2 = startPosOffset + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 6, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                                tileToPaint2 = tileCornerUpperRight;
+                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                tilePos2 = startPosOffset + new Vector3Int(0, 5, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                                tilemapWalls.SetTile(tilePos2, null);
+                                tilePos2 = startPosOffset + new Vector3Int(0, 4, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                                tilemapWalls.SetTile(tilePos2, null);
+
+                                tilePos2 = startPosOffset + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 5, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                                tilemapWalls.SetTile(tilePos2, null);
+                                tilePos2 = startPosOffset + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 4, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                                tilemapWalls.SetTile(tilePos2, null);
+
+                                tilePos2 = startPosOffset + new Vector3Int(0, 5, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                                tileToPaint2 = tileBricks03;
+                                tilemapFloorWalls.SetTile(tilePos2, tileToPaint2);
+
+                                tilePos2 = startPosOffset + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 5, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                                tileToPaint2 = tileBricks02;
+                                tilemapFloorWalls.SetTile(tilePos2, tileToPaint2);
+
+                                tilePos2 = startPosOffset + new Vector3Int(0, 2, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                                tileToPaint2 = tileCornerLowerRight;
+                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                tilePos2 = startPosOffset + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 2, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                                tileToPaint2 = tileCornerLowerLeft;
+                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                tilePos2 = startPosOffset + new Vector3Int(0, 3, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                                tileToPaint2 = tileCorner02LowerRight;
+                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                tilePos2 = startPosOffset + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 3, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                                tileToPaint2 = tileCorner02LowerLeft;
+                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                nodePairs.Add($"{fromNode},{toNode}");
+                                continue;
                             }
                         }
                         if (startPos1.y < startPos2.y)
                         {
-                            if (startPos1.x <= startPos2.x)
+                            bool case_orientation = true;
+                            if (startPos1.x > startPos2.x)
                             {
-                                if (startPos2.x < startPos1.x + sizeInTiles1.x - 6)
-                                {
-                                    for (int i = 0; i <= startPos2.y - startPos1.y - sizeInTiles1.y + 1; ++i)
-                                    {
-                                        Vector3Int tilePos = startPos2 + new Vector3Int(2, i * -1, 0);
-                                        TileBase tileToPaint = getRandomTileFloor();
-                                        tilemapFloor.SetTile(tilePos, tileToPaint);
-
-                                        tilePos = startPos2 + new Vector3Int(3, i * -1, 0);
-                                        tileToPaint = getRandomTileFloor();
-                                        tilemapFloor.SetTile(tilePos, tileToPaint);
-                                    }
-                                    nodePairs.Add($"{fromNode},{toNode}");
-                                    continue;
-                                }
+                                case_orientation = false;
                             }
-                            else if (startPos1.x > startPos2.x)
+
+                            if ((case_orientation && startPos1.x <= startPos2.x && startPos2.x < startPos1.x + sizeInTiles1.x - 5) || (!case_orientation && startPos1.x > startPos2.x && startPos1.x < startPos2.x + sizeInTiles2.x - 5))
                             {
-                                if (startPos1.x < startPos2.x + sizeInTiles2.x - 6)
+                                Vector3Int startPosOffset = case_orientation ? startPos2 : startPos1;
+                                int startPosOffsetExtra = case_orientation ? 0 : startPos2.y - startPos1.y;
+
+                                for (int i = -1; i <= startPos2.y - startPos1.y - sizeInTiles1.y + 1; ++i)
                                 {
-                                    for (int i = 0; i <= startPos2.y - startPos1.y - sizeInTiles1.y + 1; ++i)
-                                    {
-                                        Vector3Int tilePos = startPos1 + new Vector3Int(2, i + sizeInTiles1.y - 1, 0);
-                                        TileBase tileToPaint = getRandomTileFloor();
-                                        tilemapFloor.SetTile(tilePos, tileToPaint);
+                                    int offset = case_orientation ? i * -1 : i + sizeInTiles1.y;
 
-                                        tilePos = startPos1 + new Vector3Int(3, i + sizeInTiles1.y - 1, 0);
-                                        tileToPaint = getRandomTileFloor();
-                                        tilemapFloor.SetTile(tilePos, tileToPaint);
-                                    }
-                                    nodePairs.Add($"{fromNode},{toNode}");
-                                    continue;
+                                    Vector3Int tilePos = startPosOffset + new Vector3Int(2, offset, 0);
+                                    TileBase tileToPaint = getRandomTileFloor();
+                                    tilemapFloor.SetTile(tilePos, tileToPaint);
+
+                                    tilePos = startPosOffset + new Vector3Int(3, offset, 0);
+                                    tileToPaint = getRandomTileFloor();
+                                    tilemapFloor.SetTile(tilePos, tileToPaint);
+
+                                    tilePos = startPosOffset + new Vector3Int(1, offset, 0);
+                                    tileToPaint = tileWallLeft;
+                                    tilemapWalls.SetTile(tilePos, tileToPaint);
+
+                                    tilePos = startPosOffset + new Vector3Int(4, offset, 0);
+                                    tileToPaint = tileWallRight;
+                                    tilemapWalls.SetTile(tilePos, tileToPaint);
                                 }
-                            }
-                        }
-                    }
-                }
 
-                foreach (var nodePair in extraEdgesGraph)
-                {
-                    int fromNode = nodePair.Key;
-                    foreach (int toNode in nodePair.Value)
-                    {
-                        //startPoint
-                        //endPoint
+                                Vector3Int tilePos2 = startPosOffset + new Vector3Int(1, 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                                TileBase tileToPaint2 = tileCornerLowerRight;
+                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
 
-                        if (nodePairs.Contains($"{toNode},{fromNode}"))
-                        {
-                            continue;
-                        }
+                                tilePos2 = startPosOffset + new Vector3Int(4, 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                                tileToPaint2 = tileCornerLowerLeft;
+                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
 
-                        Rigidbody2D rb1 = sortedRectangles[fromNode].GetComponent<Rigidbody2D>();
-                        Vector3Int startPos1 = tilemapFloor.WorldToCell(rb1.position);
-                        Rigidbody2D rb2 = sortedRectangles[toNode].GetComponent<Rigidbody2D>();
-                        Vector3Int startPos2 = tilemapFloor.WorldToCell(rb2.position);
+                                tilePos2 = startPosOffset + new Vector3Int(1, 2, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                                tileToPaint2 = tileCorner02LowerRight;
+                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
 
-                        Vector3 tileSize = tilemapFloor.cellSize;
+                                tilePos2 = startPosOffset + new Vector3Int(4, 2, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                                tileToPaint2 = tileCorner02LowerLeft;
+                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
 
-                        Vector3Int sizeInTiles1 = new Vector3Int(
-                            Mathf.RoundToInt(rb1.GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
-                            Mathf.RoundToInt(rb1.GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
-                            1);
-                        Vector3Int sizeInTiles2 = new Vector3Int(
-                            Mathf.RoundToInt(rb2.GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
-                            Mathf.RoundToInt(rb2.GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
-                            1);
+                                tilePos2 = startPosOffset + new Vector3Int(2, 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                                tilemapWalls.SetTile(tilePos2, null);
+                                tilePos2 = startPosOffset + new Vector3Int(2, 2, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                                tilemapWalls.SetTile(tilePos2, null);
+                                tilePos2 = startPosOffset + new Vector3Int(3, 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                                tilemapWalls.SetTile(tilePos2, null);
+                                tilePos2 = startPosOffset + new Vector3Int(3, 2, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                                tilemapWalls.SetTile(tilePos2, null);
 
-                        if (startPos1.x < startPos2.x)
-                        {
-                            if (startPos1.y <= startPos2.y)
-                            {
-                                if (startPos2.y < startPos1.y + sizeInTiles1.y - 4)
-                                {
-                                    for (int i = 1; i <= startPos2.x - startPos1.x - sizeInTiles1.x; ++i)
-                                    {
-                                        Vector3Int tilePos = startPos2 + new Vector3Int(i * -1, 3, 0);
-                                        TileBase tileToPaint = getRandomTileFloor();
-                                        tilemapFloor.SetTile(tilePos, tileToPaint);
-                                    }
-                                    nodePairs.Add($"{fromNode},{toNode}");
-                                    continue;
-                                }
-                            }
-                            else if (startPos1.y > startPos2.y)
-                            {
-                                if (startPos1.y < startPos2.y + sizeInTiles2.y - 4)
-                                {
-                                    for (int i = 1; i <= startPos2.x - startPos1.x - sizeInTiles1.x; ++i)
-                                    {
-                                        Vector3Int tilePos = startPos1 + new Vector3Int(i + sizeInTiles1.x - 1, 3, 0);
-                                        TileBase tileToPaint = getRandomTileFloor();
-                                        tilemapFloor.SetTile(tilePos, tileToPaint);
-                                    }
-                                    nodePairs.Add($"{fromNode},{toNode}");
-                                    continue;
-                                }
-                            }
-                        }
-                        if (startPos1.y < startPos2.y)
-                        {
-                            if (startPos1.x <= startPos2.x)
-                            {
-                                if (startPos2.x < startPos1.x + sizeInTiles1.x - 4)
-                                {
-                                    for (int i = 0; i <= startPos2.y - startPos1.y - sizeInTiles1.y + 1; ++i)
-                                    {
-                                        Vector3Int tilePos = startPos2 + new Vector3Int(2, i * -1, 0);
-                                        TileBase tileToPaint = getRandomTileFloor();
-                                        tilemapFloor.SetTile(tilePos, tileToPaint);
-                                    }
-                                    nodePairs.Add($"{fromNode},{toNode}");
-                                    continue;
-                                }
-                            }
-                            else if (startPos1.x > startPos2.x)
-                            {
-                                if (startPos1.x < startPos2.x + sizeInTiles2.x - 4)
-                                {
-                                    for (int i = 0; i <= startPos2.y - startPos1.y - sizeInTiles1.y + 1; ++i)
-                                    {
-                                        Vector3Int tilePos = startPos1 + new Vector3Int(2, i + sizeInTiles1.y - 1, 0);
-                                        TileBase tileToPaint = getRandomTileFloor();
-                                        tilemapFloor.SetTile(tilePos, tileToPaint);
-                                    }
-                                    nodePairs.Add($"{fromNode},{toNode}");
-                                    continue;
-                                }
+                                tilePos2 = startPosOffset + new Vector3Int(1, startPos1.y - startPos2.y + sizeInTiles1.y, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                                tileToPaint2 = tileCornerUpperLeft;
+                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                tilePos2 = startPosOffset + new Vector3Int(4, startPos1.y - startPos2.y + sizeInTiles1.y, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                                tileToPaint2 = tileCornerUpperRight;
+                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                tilePos2 = startPosOffset + new Vector3Int(2, startPos1.y - startPos2.y + sizeInTiles1.y, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                                tilemapWalls.SetTile(tilePos2, null);
+                                tilePos2 = startPosOffset + new Vector3Int(2, startPos1.y - startPos2.y + sizeInTiles1.y - 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                                tilemapFloorWalls.SetTile(tilePos2, null);
+                                tilePos2 = startPosOffset + new Vector3Int(3, startPos1.y - startPos2.y + sizeInTiles1.y, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                                tilemapWalls.SetTile(tilePos2, null);
+                                tilePos2 = startPosOffset + new Vector3Int(3, startPos1.y - startPos2.y + sizeInTiles1.y - 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                                tilemapFloorWalls.SetTile(tilePos2, null);
+
+                                tilePos2 = startPosOffset + new Vector3Int(1, startPos1.y - startPos2.y + sizeInTiles1.y - 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                                tilemapWalls.SetTile(tilePos2, null);
+                                tilePos2 = startPosOffset + new Vector3Int(4, startPos1.y - startPos2.y + sizeInTiles1.y - 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                                tilemapWalls.SetTile(tilePos2, null);
+
+                                tilePos2 = startPosOffset + new Vector3Int(1, startPos1.y - startPos2.y + sizeInTiles1.y - 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                                tileToPaint2 = tileBricks03;
+                                tilemapFloorWalls.SetTile(tilePos2, tileToPaint2);
+                                    
+                                tilePos2 = startPosOffset + new Vector3Int(4, startPos1.y - startPos2.y + sizeInTiles1.y - 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                                tileToPaint2 = tileBricks02;
+                                tilemapFloorWalls.SetTile(tilePos2, tileToPaint2);
+
+                                nodePairs.Add($"{fromNode},{toNode}");
+                                continue;
                             }
                         }
                     }
