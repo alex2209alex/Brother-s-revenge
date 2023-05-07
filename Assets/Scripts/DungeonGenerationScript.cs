@@ -458,9 +458,6 @@ public class DungeonGenerationScript : MonoBehaviour
                     int fromNode = nodePair.Key;
                     foreach (int toNode in nodePair.Value)
                     {
-                        //startPoint
-                        //endPoint
-
                         if (nodePairs.Contains($"{toNode},{fromNode}"))
                         {
                             continue;

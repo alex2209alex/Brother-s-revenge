@@ -3162,7 +3162,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   numRooms: 60
-  mainRoomsPercentage: 0.75
+  mainRoomsPercentage: 0.7
   extraEdgesPercentage: 0.2
   aspectRatioWeight: 1150
   chanceTileFloor01: 0.93
@@ -3182,7 +3182,7 @@ MonoBehaviour:
   startPoints: []
   endPoints: []
   lineColor: {r: 0, g: 0, b: 1, a: 1}
-  lineWidth: 0.3
+  lineWidth: 0.15
   sortingLayerName: Default
   sortingOrder: 100
   tilemapFloor: {fileID: 1738476036}
