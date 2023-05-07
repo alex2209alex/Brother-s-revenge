@@ -3162,8 +3162,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   numRooms: 60
-  mainRoomsPercentage: 0.2
-  extraEdgesPercentage: 0.15
+  mainRoomsPercentage: 0.75
+  extraEdgesPercentage: 0.2
   aspectRatioWeight: 1150
   chanceTileFloor01: 0.93
   chanceTileFloor02: 0.98

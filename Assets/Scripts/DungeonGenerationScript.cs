@@ -485,7 +485,7 @@ public class DungeonGenerationScript : MonoBehaviour
                         if (startPos1.x < startPos2.x)
                         {
                             bool case_orientation = true;
-                            if (startPos1.x > startPos2.x)
+                            if (startPos1.y > startPos2.y)
                             {
                                 case_orientation = false;
                             }
@@ -578,7 +578,7 @@ public class DungeonGenerationScript : MonoBehaviour
                                 case_orientation = false;
                             }
 
-                            if ((case_orientation && startPos1.x <= startPos2.x && startPos2.x < startPos1.x + sizeInTiles1.x - 6) || (!case_orientation && startPos1.x > startPos2.x && startPos1.x < startPos2.x + sizeInTiles2.x - 6))
+                            if ((case_orientation && startPos1.x <= startPos2.x && startPos2.x < startPos1.x + sizeInTiles1.x - 5) || (!case_orientation && startPos1.x > startPos2.x && startPos1.x < startPos2.x + sizeInTiles2.x - 5))
                             {
                                 Vector3Int startPosOffset = case_orientation ? startPos2 : startPos1;
                                 int startPosOffsetExtra = case_orientation ? 0 : startPos2.y - startPos1.y;
@@ -603,7 +603,6 @@ public class DungeonGenerationScript : MonoBehaviour
                                     tileToPaint = tileWallRight;
                                     tilemapWalls.SetTile(tilePos, tileToPaint);
                                 }
-                                Debug.Log(case_orientation);
 
                                 Vector3Int tilePos2 = startPosOffset + new Vector3Int(1, 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
                                 TileBase tileToPaint2 = tileCornerLowerRight;
