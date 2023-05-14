@@ -4222,7 +4222,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 20e666d6e972ce1489a45b2f4a86952b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numRooms: 70
+  numRooms: 100
   mainRoomsPercentage: 0.7
   extraEdgesPercentage: 0.2
   aspectRatioWeight: 1150
