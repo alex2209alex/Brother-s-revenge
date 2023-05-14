@@ -1,10 +1,10 @@
 using UnityEngine;
 
-public class Coin : Collectible
+public class DroppedItem : Collectible
 {
     public override void Collect()
     {
-        Debug.Log("Coin Collected");
+        Debug.Log("Item Collected");
         base.Collect();
     }
 }

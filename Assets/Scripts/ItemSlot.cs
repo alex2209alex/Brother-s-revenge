@@ -13,10 +13,16 @@ namespace DefaultNamespace
 
         public TextMeshProUGUI ItemName => itemName;
         public Image ItemIcon => itemIcon;
-        public TextMeshProUGUI ItemStackSize => itemStackSize;
+        public TextMeshProUGUI ItemStackSize
+        {
+            get => itemStackSize;
+            set => itemStackSize = value;
+        }
 
         public event Action<ItemSlot> OnRemove;
+        public event Action<ItemSlot> OnUse;
 
         public void RemoveItem() => OnRemove?.Invoke(this);
+        public void UseItem() => OnUse?.Invoke(this);
     }
 }

@@ -26,7 +26,7 @@ public class AIMeleeAttack : MonoBehaviour
     {
         if(collision.gameObject.tag == "Player")
         {
-            playerHP.TakeDamage(damage);
+            playerHP.TakeDamage((int)damage);
         }
     }
 }

@@ -40,6 +40,7 @@ public class Inventory : MonoBehaviour
             var itemSlot = Instantiate(itemSlotPrefab, itemContent);
             newItem.itemSlot = itemSlot;
             itemSlot.OnRemove += RemoveStack;
+            itemSlot.OnUse += newItem.UseItem;
             itemSlot.ItemName.text = newItem.itemData.displayName;
             itemSlot.ItemIcon.sprite = newItem.itemData.icon;
             itemSlot.ItemStackSize.text = newItem.stackSize.ToString();
@@ -89,6 +90,7 @@ public class Inventory : MonoBehaviour
         {
             if (item.itemData.displayName == itemSlot.ItemName.text)
             {
+                itemSlot.OnUse -= item.UseItem;
                 items.Remove(item);
                 break;
             }
