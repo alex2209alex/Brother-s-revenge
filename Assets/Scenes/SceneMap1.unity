@@ -4223,7 +4223,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   numRooms: 100
-  mainRoomsPercentage: 0.7
+  mainRoomsPercentage: 0.75
   extraEdgesPercentage: 0.2
   aspectRatioWeight: 1150
   chanceTileFloor01: 0.93
