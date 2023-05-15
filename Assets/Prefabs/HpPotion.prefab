@@ -114,4 +114,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 916d2bf9b4736574192a87d367932508, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  collectibleData: {fileID: 11400000, guid: 5628f08888b82854e8c055c625897b3f, type: 2}
+  collectibleData: {fileID: 11400000, guid: dd5d2e4b818129e43a4248ddebd581b2, type: 2}

@@ -9,7 +9,20 @@ public class PlayerHP : MonoBehaviour
 {
     public double currentHP;
     private double maxHP = 100;
-    public event Action OnDamageTaken; 
+    public event Action HpUpdate;
+
+    public double CurrentHP
+    {
+        get => currentHP;
+        set
+        {
+            if (currentHP + value > 100)
+                currentHP = maxHP;
+            else
+                currentHP += value;
+            HpUpdate?.Invoke();
+        }
+    }
 
 
     // Start is called before the first frame update
@@ -32,6 +45,6 @@ public class PlayerHP : MonoBehaviour
         {
             Destroy(gameObject);
         }
-        OnDamageTaken?.Invoke();
+        HpUpdate?.Invoke();
     }
 }

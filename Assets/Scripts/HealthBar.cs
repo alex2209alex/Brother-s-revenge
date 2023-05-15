@@ -12,12 +12,12 @@ public class HealthBar : MonoBehaviour
 
     private void OnEnable()
     {
-        playerHP.OnDamageTaken += SetHealth;
+        playerHP.HpUpdate += SetHealth;
     }
     
     private void OnDisable()
     {
-        playerHP.OnDamageTaken -= SetHealth;
+        playerHP.HpUpdate -= SetHealth;
     }
 
 
@@ -40,7 +40,7 @@ public class HealthBar : MonoBehaviour
 
     public void SetHealth()
     {
-        slider.value = (float)playerHP.currentHP;
+        slider.value = (float)playerHP.CurrentHP;
     }
     
 }

@@ -32,11 +32,8 @@ public class InventoryItem
     public virtual void UseItem(ItemSlot itemSlot)
     {
         stackSize--;
-        if (stackSize == 0)
-        {
-            itemSlot.RemoveItem();
-        }
+        if (stackSize <= 0) itemSlot.RemoveItem();
         itemSlot.ItemStackSize.text = stackSize.ToString();
-        Debug.Log("Eating: " + itemData.displayName);
+        itemData.UseItem();
     }
 }

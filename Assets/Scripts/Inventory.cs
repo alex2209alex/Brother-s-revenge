@@ -11,12 +11,14 @@ using UnityEngine.UI;
 public class Inventory : MonoBehaviour
 {
     [SerializeField] private int maxSlots = 12;
+    [SerializeField] private PlayerAttributes playerAttributes;
     private List<InventoryItem> items = new List<InventoryItem>();
 
     public Transform itemContent;
     public ItemSlot itemSlotPrefab;
 
     public Toggle enableRemove;
+    public PlayerAttributes PlayerAttributes => playerAttributes;
     
     private void OnEnable() => Collectible.OnItemCollected += Add;
     private void OnDisable() => Collectible.OnItemCollected -= Add;
@@ -25,6 +27,7 @@ public class Inventory : MonoBehaviour
     public void Add(ItemData itemData)
     {
         foundItem = items.FirstOrDefault(item => item.itemData == itemData && item.itemData.maxStackSize > item.stackSize);
+        itemData.Inventory = this;
         if (foundItem != null)
         {
             foundItem.AddToStack();
@@ -83,18 +86,13 @@ public class Inventory : MonoBehaviour
     
     public void RemoveStack(ItemSlot itemSlot)
     {
-        if (!enableRemove.isOn) return;
+        foundItem = items.FirstOrDefault(item => item.itemData.displayName == itemSlot.ItemName.text);
+        if(foundItem == null) return;
+        if (!enableRemove.isOn && foundItem.stackSize > 0) return;
         Debug.Log("RemoveStack is called");
         itemSlot.OnRemove -= RemoveStack;
-        foreach (var item in items)
-        {
-            if (item.itemData.displayName == itemSlot.ItemName.text)
-            {
-                itemSlot.OnUse -= item.UseItem;
-                items.Remove(item);
-                break;
-            }
-        }
+        itemSlot.OnUse -= foundItem.UseItem;
+        items.Remove(foundItem);
         Destroy(itemSlot.gameObject);
         Debug.Log("itemSlot destroyed");
     }
