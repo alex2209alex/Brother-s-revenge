@@ -133,6 +133,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4173025}
   - component: {fileID: 4173024}
+  - component: {fileID: 4173026}
   m_Layer: 0
   m_Name: Inventory
   m_TagString: Untagged
@@ -153,6 +154,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxSlots: 10
+  playerAttributes: {fileID: 4173026}
   itemContent: {fileID: 331535656}
   itemSlotPrefab: {fileID: 8286688120060556068, guid: 4f3a79e8c200bfb4cac017b9c5b6fb12, type: 3}
   enableRemove: {fileID: 2128426246}
@@ -171,6 +173,21 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4173026
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4173023}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5aec25f0db651ec469522fad5f678bdb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerHp: {fileID: 1866138081}
+  playerMovement: {fileID: 1866138084}
+  collector: {fileID: 1866138080}
 --- !u!1001 &35923418
 PrefabInstance:
   m_ObjectHideFlags: 0

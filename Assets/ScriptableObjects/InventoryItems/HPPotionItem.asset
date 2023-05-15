@@ -15,3 +15,4 @@ MonoBehaviour:
   displayName: HP Potion
   icon: {fileID: -1962471026, guid: 7c9344df3a03c614fb1e2992bd427eab, type: 3}
   maxStackSize: 3
+  hp: 20
