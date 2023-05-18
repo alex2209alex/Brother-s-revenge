@@ -12,6 +12,7 @@ public class DungeonGenerationScript : MonoBehaviour
     public float extraEdgesPercentage = 0.15f;
     public float aspectRatioWeight = 0f;
     public float chanceTileFloor01, chanceTileFloor02;
+    public int startingRoom;
     public int meanWidth, stdDevWidth, minWidth, maxWidth;
     public int meanHeight, stdDevHeight, minHeight, maxHeight;
 
@@ -23,6 +24,7 @@ public class DungeonGenerationScript : MonoBehaviour
     private bool dungeonBuilt = false;
     List<GameObject> sortedRectangles;
 
+    public GameObject Player;
     public int numLines;
     public Vector2[] startPoints;
     public Vector2[] endPoints;
@@ -32,6 +34,7 @@ public class DungeonGenerationScript : MonoBehaviour
     public int sortingOrder = 100;
     private LineRenderer[] lineRenderers;
     private Delaunator delaunator;
+    Vector3 tileSize = new Vector3(1,1,1);
 
     public Tilemap tilemapFloor, tilemapFloorWalls, tilemapDecoratives, tilemapWalls;
     public Tile tileFloor01, tileBricks01, tileWallUpper, tileWallUpperLeft, tileWallUpperRight, tileWallLowerLeft, tileWallLowerRight, tileWallLeft, tileWallRight;
@@ -282,7 +285,7 @@ public class DungeonGenerationScript : MonoBehaviour
             }
         }
     }
-    void generateHallways(Dictionary<int, HashSet<int>> extraEdgesGraph, HashSet<string> nodePairs, bool initialBuild)
+    void generateHallways(Dictionary<int, HashSet<int>> extraEdgesGraph, HashSet<string> nodePairs, bool initialBuild, int buildStep = 0)
     {
         List<HashSet<int>> connectedComponents = new List<HashSet<int>>();
         if (!initialBuild)
@@ -311,12 +314,13 @@ public class DungeonGenerationScript : MonoBehaviour
                 }
                 Debug.Log(componentString);
             }
+            if (buildStep == connectedComponents.Count) return;
         }
 
         foreach (var nodePair in extraEdgesGraph)
         {
             int fromNode = nodePair.Key;
-            foreach (int toNode in (initialBuild ? nodePair.Value: connectedComponents[1]))
+            foreach (int toNode in (initialBuild ? nodePair.Value: connectedComponents[buildStep]))
             {
                 if (nodePairs.Contains($"{toNode},{fromNode}") || nodePairs.Contains($"{fromNode},{toNode}"))
                 {
@@ -327,8 +331,6 @@ public class DungeonGenerationScript : MonoBehaviour
                 Vector3Int startPos1 = tilemapFloor.WorldToCell(rb1.position);
                 Rigidbody2D rb2 = sortedRectangles[toNode].GetComponent<Rigidbody2D>();
                 Vector3Int startPos2 = tilemapFloor.WorldToCell(rb2.position);
-
-                Vector3 tileSize = tilemapFloor.cellSize;
 
                 Vector3Int sizeInTiles1 = new Vector3Int(
                     Mathf.RoundToInt(rb1.GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
@@ -503,6 +505,7 @@ public class DungeonGenerationScript : MonoBehaviour
                             if (!initialBuild)
                             {
                                 Debug.Log("Changed graph.");
+                                generateHallways(extraEdgesGraph, nodePairs, false, 1);
                                 return;
                             }
                             continue;
@@ -522,7 +525,7 @@ public class DungeonGenerationScript : MonoBehaviour
                                     for (int endL = startPos1.x + sizeInTiles1.x - 4; endL > startPos1.x + 1; --endL)
                                     {
                                         bool intersectionL = false;
-                                        for (int i = startPos2.x; i >= endL + 1; --i)
+                                        for (int i = startPos2.x; i >= endL; --i)
                                         {
                                             if (tilemapFloor.GetTile(new Vector3Int(i, startL, 0)) != null)
                                             {
@@ -751,6 +754,7 @@ public class DungeonGenerationScript : MonoBehaviour
                                         if (!initialBuild)
                                         {
                                             Debug.Log("Changed graph.");
+                                            generateHallways(extraEdgesGraph, nodePairs, false, 1);
                                             return;
                                         }
                                         break;
@@ -766,7 +770,7 @@ public class DungeonGenerationScript : MonoBehaviour
                                     for (int endL = startPos2.x + 2; endL < startPos2.x + sizeInTiles2.x - 3; ++endL)
                                     {
                                         bool intersectionL = false;
-                                        for (int i = startPos1.x + sizeInTiles1.x - 1; i <= endL + 1; ++i)
+                                        for (int i = startPos1.x + sizeInTiles1.x - 1; i <= endL + 2; ++i)
                                         {
                                             if (tilemapFloor.GetTile(new Vector3Int(i, startL, 0)) != null)
                                             {
@@ -988,6 +992,7 @@ public class DungeonGenerationScript : MonoBehaviour
                                         if (!initialBuild)
                                         {
                                             Debug.Log("Changed graph.");
+                                            generateHallways(extraEdgesGraph, nodePairs, false, 1);
                                             return;
                                         }
                                         break;
@@ -1150,6 +1155,7 @@ public class DungeonGenerationScript : MonoBehaviour
                             if (!initialBuild)
                             {
                                 Debug.Log("Changed graph.");
+                                generateHallways(extraEdgesGraph, nodePairs, false, 1);
                                 return;
                             }
                             continue;
@@ -1158,6 +1164,8 @@ public class DungeonGenerationScript : MonoBehaviour
                 }
             }
         }
+        generateHallways(extraEdgesGraph, nodePairs, false, buildStep + 1);
+        return;
     }
 
 
@@ -1347,8 +1355,9 @@ public class DungeonGenerationScript : MonoBehaviour
 
                 //GENERATE HALLWAYS
                 HashSet<string> nodePairs = new HashSet<string>();
+
                 generateHallways(extraEdgesGraph, nodePairs, true);
-                generateHallways(extraEdgesGraph, nodePairs, false);
+                generateHallways(extraEdgesGraph, nodePairs, false, 1);
 
                 List<HashSet<int>> connectedComponents = new List<HashSet<int>>();
                 HashSet<int> visitedNodes = new HashSet<int>();
@@ -1375,7 +1384,26 @@ public class DungeonGenerationScript : MonoBehaviour
                     }
                     Debug.Log(componentString);
                 }
+                Debug.Log("Finished");
 
+                //SELECT MAIN ROOMS
+                if (connectedComponents.Count > 0)
+                {
+                    //Starting Room
+                    int randomIndex = UnityEngine.Random.Range(0, connectedComponents[0].Count);
+                    int[] firstIndexElements = new int[connectedComponents[0].Count];
+                    connectedComponents[0].CopyTo(firstIndexElements);
+                    startingRoom = firstIndexElements[randomIndex];
+                    Debug.Log("Starting Room: " + startingRoom);
+                    
+                    Vector3Int sizeInTilesStart = new Vector3Int(
+                    Mathf.RoundToInt(sortedRectangles[startingRoom].GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
+                    Mathf.RoundToInt(sortedRectangles[startingRoom].GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
+                    1);
+                    Vector3 newPosition = new Vector3 (sortedRectangles[startingRoom].transform.position.x + sizeInTilesStart.x / 2, sortedRectangles[startingRoom].transform.position.y + sizeInTilesStart.x / 2, 0);
+                    Player.transform.position = newPosition;
+                    Player.SetActive(true);
+                }
 
                 //DEACTIVATE ROOM RECTANGLES
                 foreach (GameObject rectangle in rectangles)
@@ -1383,6 +1411,83 @@ public class DungeonGenerationScript : MonoBehaviour
                     rectangle.SetActive(false);
                 }
 
+                //DEACTIVATE ROOM RECTANGLES
+                foreach (GameObject rectangle in rectangles)
+                {
+                    rectangle.SetActive(false);
+                }
+
+
+                /*
+                //REMOVE SINGLE ROOMS
+                roomsToDraw = numRectanglesToChange;
+                foreach (GameObject rectangle in sortedRectangles)
+                {
+                    if (graphFinal.ContainsKey(sortedRectangles.IndexOf(rectangle))) continue;
+
+                    if (roomsToDraw <= 0) break;
+                    --roomsToDraw;
+
+                    Rigidbody2D rb = rectangle.GetComponent<Rigidbody2D>();
+                    Vector3Int startPos = tilemapFloor.WorldToCell(rb.position);
+
+                    Vector3 tileSize = tilemapFloor.cellSize;
+                    Vector3Int sizeInTiles = new Vector3Int(
+                        Mathf.RoundToInt(rb.GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
+                        Mathf.RoundToInt(rb.GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
+                        1);
+
+                    //Floor
+                    for (int i = 1; i < sizeInTiles.x - 1; ++i)
+                    {
+                        for (int j = 2; j < sizeInTiles.y - 1; ++j)
+                        {
+                            Vector3Int tilePos = startPos + new Vector3Int(i, j, 0);
+                            tilemapFloor.SetTile(tilePos, null);
+                        }
+                    }
+
+                    //FloorWalls
+                    for (int i = 1; i < sizeInTiles.x - 1; ++i)
+                    {
+                        Vector3Int tilePos = startPos + new Vector3Int(i, sizeInTiles.y - 1, 0);
+                        tilemapFloorWalls.SetTile(tilePos, null);
+
+                        tilePos = startPos + new Vector3Int(i, sizeInTiles.y, 0);
+                        tilemapWalls.SetTile(tilePos, null);
+                    }
+                    Vector3Int tilePos2 = startPos + new Vector3Int(0, sizeInTiles.y - 1, 0);
+
+                    //Walls
+                    for (int j = 2; j < sizeInTiles.y; ++j)
+                    {
+                        Vector3Int tilePos = startPos + new Vector3Int(0, j, 0);
+                        tilemapWalls.SetTile(tilePos, null);
+
+                        tilePos = startPos + new Vector3Int(sizeInTiles.x - 1, j, 0);
+                        tilemapWalls.SetTile(tilePos, null);
+                    }
+                    for (int i = 1; i < sizeInTiles.x - 1; ++i)
+                    {
+                        Vector3Int tilePos = startPos + new Vector3Int(i, 1, 0);
+                        tilemapWalls.SetTile(tilePos, null);
+
+                        tilePos = startPos + new Vector3Int(i, 2, 0);
+                        tilemapWalls.SetTile(tilePos, null);
+                    }
+
+                    tilePos2 = startPos + new Vector3Int(0, sizeInTiles.y, 0);
+                    tilemapWalls.SetTile(tilePos2, null);
+                    tilePos2 = startPos + new Vector3Int(sizeInTiles.x - 1, sizeInTiles.y, 0);
+                    tilemapWalls.SetTile(tilePos2, null);
+
+                    tilePos2 = startPos + new Vector3Int(0, 1, 0);
+                    tilemapWalls.SetTile(tilePos2, null);
+                    tilePos2 = startPos + new Vector3Int(sizeInTiles.x - 1, 1, 0);
+                    tilemapWalls.SetTile(tilePos2, null);
+                }*/
+
+                /*
                 //DEBUG LINES
                 for (int i = 0; i < lineIndex; i++)
                 {
@@ -1404,7 +1509,7 @@ public class DungeonGenerationScript : MonoBehaviour
 
                     lineRenderers[i] = lineRenderer;
                 }
-
+                */
             }
         }
     }
