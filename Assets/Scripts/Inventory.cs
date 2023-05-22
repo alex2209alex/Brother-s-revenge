@@ -51,7 +51,7 @@ public class Inventory : MonoBehaviour
             Debug.Log($"Added {itemData.displayName} to the inventory for the first time");
         }
     }
-
+    //photopea e un editor moca de tiless
     public void Remove(ItemData itemData)
     {
         foundItem = items.FirstOrDefault(item => item.itemData == itemData);
