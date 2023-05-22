@@ -322,6 +322,7 @@ public class DungeonGenerationScript : MonoBehaviour
             int fromNode = nodePair.Key;
             foreach (int toNode in (initialBuild ? nodePair.Value: connectedComponents[buildStep]))
             {
+                Debug.Log("Try: " + fromNode + " " + toNode);
                 if (nodePairs.Contains($"{toNode},{fromNode}") || nodePairs.Contains($"{fromNode},{toNode}"))
                 {
                     continue;
