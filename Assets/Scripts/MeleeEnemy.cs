@@ -7,7 +7,7 @@ public class MeleeEnemy : Enemy
     // Start is called before the first frame update
     void Start()
     {
-        maxHP = 10;
+        maxHP = 5;
         currentHP = maxHP;
         movementSpeed = 1;
         visionRange = 5;
@@ -35,7 +35,7 @@ public class MeleeEnemy : Enemy
             direction.Normalize();
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             transform.position = Vector2.MoveTowards(this.transform.position, playerGO.transform.position, movementSpeed * Time.deltaTime);
-            transform.rotation = Quaternion.Euler(Vector3.forward * angle);
+            transform.rotation = Quaternion.Euler(Vector3.forward * 0);
         }    
     }
 

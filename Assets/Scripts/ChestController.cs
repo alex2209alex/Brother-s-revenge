@@ -84,15 +84,12 @@ public class ChestController : MonoBehaviour
     void Start()
     {
         // animator = GetComponent<Animator>();
-        // stateOfChest = 0;
-        // //add some weapons to chest
+        stateOfChest = 0;
+        //add some weapons to chest
         // Weapon weapon1 = new Weapon();
-        // weapon1.ItemName = "Sword";
-        // weapon1.ItemID = 1;
-        // weapon1.InventoryWidth = 1;
-        // weapon1.InventoryHeight = 1;
-        // weapon1.Damage = 10;
         // AddItem(weapon1);
+        //ideea e ca aici am pus un item ca chestul sa aiba animatia cu cufarul plin
+        //daca chestul e gol, atunci chestul apare chel
         // set state of chest depending on if it has items or not
         if(numberOfItems > 0)
             {
