@@ -9,11 +9,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1708d8318addfb640b15093338025db0, type: 3}
-  m_Name: SpeedPotionItem
+  m_Script: {fileID: 11500000, guid: b24d5ff3d78fc0f49a6a5f8da4f93afd, type: 3}
+  m_Name: ArmorItem
   m_EditorClassIdentifier: 
-  displayName: SpeedPotion
-  icon: {fileID: 1523277761, guid: 7c9344df3a03c614fb1e2992bd427eab, type: 3}
-  maxStackSize: 3
-  itemType: Active
-  multiplier: 1.5
+  displayName: Armor
+  icon: {fileID: 21300000, guid: d659f7396cd57754eba78763cf986c51, type: 3}
+  maxStackSize: 1
+  itemType: Passive

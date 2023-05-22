@@ -9,6 +9,7 @@ public class PlayerHP : MonoBehaviour
 {
     public double currentHP;
     private double maxHP = 100;
+    public float armor;
     public event Action HpUpdate;
 
     public double CurrentHP
@@ -22,6 +23,12 @@ public class PlayerHP : MonoBehaviour
                 currentHP += value;
             HpUpdate?.Invoke();
         }
+    }
+
+    public float Armor
+    {
+        get => armor;
+        set => armor = value;
     }
 
 
@@ -39,7 +46,7 @@ public class PlayerHP : MonoBehaviour
 
     public void TakeDamage(int amount) 
     {
-        currentHP -= amount;
+        currentHP -= amount * (1 -  (0.5 * armor / 100));
 
         if(currentHP <= 0)
         {

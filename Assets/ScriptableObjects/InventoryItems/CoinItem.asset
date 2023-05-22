@@ -15,3 +15,4 @@ MonoBehaviour:
   displayName: Coin
   icon: {fileID: -1227764333, guid: 017ef8778ecd6f54fac874a44f3352bf, type: 3}
   maxStackSize: 2
+  itemType: Active

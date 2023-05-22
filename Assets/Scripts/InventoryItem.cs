@@ -31,7 +31,8 @@ public class InventoryItem
 
     public virtual void UseItem(ItemSlot itemSlot)
     {
-        stackSize--;
+        if(itemData.itemType == "Active")
+            stackSize--;
         if (stackSize <= 0) itemSlot.RemoveItem();
         itemSlot.ItemStackSize.text = stackSize.ToString();
         itemData.UseItem();
