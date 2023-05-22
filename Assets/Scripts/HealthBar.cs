@@ -6,18 +6,17 @@ using UnityEngine.UI;
 
 public class HealthBar : MonoBehaviour
 {
-    // Start is called before the first frame update
-    [SerializeField] private  PlayerHP playerHP; 
+    [SerializeField] private  Player player; 
     public Slider slider;
 
     private void OnEnable()
     {
-        playerHP.HpUpdate += SetHealth;
+        player.HpUpdate += SetHealth;
     }
     
     private void OnDisable()
     {
-        playerHP.HpUpdate -= SetHealth;
+        player.HpUpdate -= SetHealth;
     }
 
 
@@ -25,22 +24,16 @@ public class HealthBar : MonoBehaviour
     {
         SetHealth();
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
     
-    public void SetMaxHealth(double health)
+    /*public void SetMaxHealth(double health)
     {
         slider.maxValue = (float)health;
         slider.value = (float)health;
-    }
+    }*/
 
-    public void SetHealth()
+    private void SetHealth()
     {
-        slider.value = (float)playerHP.CurrentHP;
+        slider.value = (float)player.CurrentHP;
     }
     
 }

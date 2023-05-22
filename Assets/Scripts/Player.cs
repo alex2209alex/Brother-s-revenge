@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,7 +12,7 @@ public class Player : MonoBehaviour
     private Animator animator;
     private Animator attackAnimator;
     [SerializeField] private double maxHP;
-    [SerializeField] private double currentHP;
+    [SerializeField] private double currentHP = 10;
     [SerializeField] private double meleeAttackRange;
     private double rangedAttackRange;
     [SerializeField] private double meleeDamage;
@@ -20,8 +21,15 @@ public class Player : MonoBehaviour
     private float lastAttackTime;
     private bool isAttackRanged;
     [SerializeField] private float movementSpeed;
+    private Quaternion targetRotation; // noua variabila pentru rotatia tinta
+    [SerializeField] private float turnSpeed; // noua variabila pentru viteza de rotatie
+    public float armor;
+    
+    public event Action HpUpdate;
+
 
     // Start is called before the first frame update
+
     void Start()
     {
         maxHP = 10;
@@ -47,20 +55,27 @@ public class Player : MonoBehaviour
     {
 
     }
-    
 
-    public void TakeDamage(double amount) 
+    public float MovementSpeed
     {
-        currentHP -= amount;
-        if(currentHP <= 0)
+        get => movementSpeed;
+        set => movementSpeed = value;
+    }
+
+    public void TakeDamage(double amount)
+    {
+        currentHP -= amount * (1 -  (0.5 * armor / 100));
+
+        if (currentHP <= 0)
         {
             gameObject.SetActive(false);
         }
+        HpUpdate?.Invoke();
     }
 
     public void Attack(Enemy enemy)
     {
-        if(isAttackRanged)
+        if (isAttackRanged)
         {
             RangedAttack(enemy);
         }
@@ -78,24 +93,24 @@ public class Player : MonoBehaviour
     private void MeleeAttack(Enemy enemy)
     {
         double distance = Vector2.Distance(transform.position, enemy.transform.position);
-        if(distance <= meleeAttackRange && attackCooldown <= Time.time - lastAttackTime)
+        if (distance <= meleeAttackRange && attackCooldown <= Time.time - lastAttackTime)
         {
             enemy.TakeDamage(meleeDamage);
             lastAttackTime = Time.time;
             //set trigger for attack animation
             attackAnimator.SetTrigger("Attack");
-        }    
+        }
     }
 
     private void OnMovement(InputValue value)
     {
         movement = value.Get<Vector2>();
-        if(movement.x != 0 || movement.y != 0)
+        if (movement.x != 0 || movement.y != 0)
         {
             animator.SetFloat("X", movement.x);
             animator.SetFloat("Y", movement.y);
             animator.SetBool("IsWalking", true);
-        }
+        }   
         else
         {
             animator.SetBool("IsWalking", false);
@@ -104,9 +119,37 @@ public class Player : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if(movement.x != 0 || movement.y != 0)
+        if (movement.x != 0 || movement.y != 0)
         {
             rb.velocity = movement * movementSpeed;
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, turnSpeed * Time.deltaTime);
         }
+
+
+    }
+    
+    public double CurrentHP
+    {
+        get => currentHP;
+        set
+        {
+            if (currentHP + value > maxHP)
+                currentHP = maxHP;
+            else
+                currentHP += value;
+            HpUpdate?.Invoke();
+        }
+    }
+    
+    public float Armor
+    {
+        get => armor;
+        set => armor = value;
+    }
+    
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        var collectible = collision.GetComponent<Collectible>();
+        if(collectible != null) collectible.Collect();
     }
 }

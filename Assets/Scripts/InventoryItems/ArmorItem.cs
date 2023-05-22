@@ -14,12 +14,12 @@ namespace InventoryItems
             if (!onPlayer)
             {
                 onPlayer = true;
-                Inventory.PlayerAttributes.PlayerHp.armor = armorValue;
+                Inventory.Player.armor = armorValue;
             }
             else
             {
                 onPlayer = false;
-                Inventory.PlayerAttributes.PlayerHp.armor = 0;
+                Inventory.Player.armor = 0;
             }
         }
     }

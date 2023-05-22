@@ -8,7 +8,7 @@ namespace InventoryItems
         [SerializeField] private float hp;
         public override void UseItem()
         {
-            Inventory.PlayerAttributes.PlayerHp.CurrentHP = hp;
+            Inventory.Player.CurrentHP = hp;
         }
     }
 }

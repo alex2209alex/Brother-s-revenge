@@ -133,6 +133,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4173025}
   - component: {fileID: 4173024}
+  - component: {fileID: 4173026}
   m_Layer: 0
   m_Name: Inventory
   m_TagString: Untagged
@@ -153,6 +154,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxSlots: 10
+  playerAttributes: {fileID: 0}
   itemContent: {fileID: 331535656}
   itemSlotPrefab: {fileID: 8286688120060556068, guid: 4f3a79e8c200bfb4cac017b9c5b6fb12, type: 3}
   enableRemove: {fileID: 2128426246}
@@ -171,6 +173,24 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4173026
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4173023}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83bd380aaca15bf45ae1be44eaa5a3fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHP: 0
+  currentHP: 0
+  meleeAttackRange: 0
+  meleeDamage: 0
+  movementSpeed: 0
+  turnSpeed: 0
 --- !u!1001 &111424693
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4620,6 +4640,7 @@ MonoBehaviour:
   meleeAttackRange: 0
   meleeDamage: 0
   movementSpeed: 0
+  turnSpeed: 0
 --- !u!1 &1872046892
 GameObject:
   m_ObjectHideFlags: 0

@@ -19,11 +19,11 @@ namespace InventoryItems
 
         IEnumerator MyCoroutine()
         {
-            Inventory.PlayerAttributes.PlayerMovement.Speed *= multiplier;
+            Inventory.Player.MovementSpeed *= multiplier;
 
             yield return new WaitForSeconds(4f);
             
-            Inventory.PlayerAttributes.PlayerMovement.Speed /= multiplier;
+            Inventory.Player.MovementSpeed /= multiplier;
         }
     }
 }

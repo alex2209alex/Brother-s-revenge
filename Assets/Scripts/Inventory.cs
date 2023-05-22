@@ -11,14 +11,14 @@ using UnityEngine.UI;
 public class Inventory : MonoBehaviour
 {
     [SerializeField] private int maxSlots = 12;
-    [SerializeField] private PlayerAttributes playerAttributes;
+    [SerializeField] private Player player;
     private List<InventoryItem> items = new List<InventoryItem>();
 
     public Transform itemContent;
     public ItemSlot itemSlotPrefab;
 
     public Toggle enableRemove;
-    public PlayerAttributes PlayerAttributes => playerAttributes;
+    public Player Player => player;
     
     private void OnEnable() => Collectible.OnItemCollected += Add;
     private void OnDisable() => Collectible.OnItemCollected -= Add;
