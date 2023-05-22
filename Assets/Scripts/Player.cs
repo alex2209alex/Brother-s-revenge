@@ -9,6 +9,7 @@ public class Player : MonoBehaviour
     private Vector2 movement;
     private Rigidbody2D rb;
     private Animator animator;
+    private Animator attackAnimator;
     [SerializeField] private double maxHP;
     [SerializeField] private double currentHP;
     [SerializeField] private double meleeAttackRange;
@@ -36,13 +37,17 @@ public class Player : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         animator = GetComponent<Animator>();
+
+        //set animatorAttack from child
+        attackAnimator = transform.GetChild(0).GetComponent<Animator>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
+    
 
     public void TakeDamage(double amount) 
     {
@@ -77,6 +82,8 @@ public class Player : MonoBehaviour
         {
             enemy.TakeDamage(meleeDamage);
             lastAttackTime = Time.time;
+            //set trigger for attack animation
+            attackAnimator.SetTrigger("Attack");
         }    
     }
 
