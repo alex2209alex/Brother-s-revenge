@@ -13,7 +13,13 @@ public class PlayerMovement : MonoBehaviour{
         rb = GetComponent<Rigidbody2D>();
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         animator = GetComponent<Animator>();
-    }   
+    }
+
+    public float Speed
+    {
+        get => speed;
+        set => speed = value;
+    }
 
     private void OnMovement(InputValue value){
         movement = value.Get<Vector2>();
