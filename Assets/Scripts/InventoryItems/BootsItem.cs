@@ -4,23 +4,28 @@ using UnityEngine;
 
 namespace InventoryItems
 {
-    [CreateAssetMenu(fileName = "ArmorItem", menuName = "Inventory/ArmorItem")]
-    public class ArmorItem : ItemData
+
+    [CreateAssetMenu(fileName = "BootsItem", menuName = "Inventory/BootsItem")]
+
+    public class BootsItem : ItemData
     {
         private bool onPlayer = false;
-        private float armorValue = 100;
+        private float speedIncrease = 4f;
+
         public override void UseItem()
         {
             if (!onPlayer)
             {
                 onPlayer = true;
-                Inventory.Player.Armor = armorValue;
+                Inventory.Player.MovementSpeed += speedIncrease;
             }
             else
             {
                 onPlayer = false;
-                Inventory.Player.Armor = 0;
+                Inventory.Player.MovementSpeed -= speedIncrease;
             }
         }
+
     }
 }
+

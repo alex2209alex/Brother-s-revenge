@@ -17,13 +17,13 @@ public class Player : MonoBehaviour
     private double rangedAttackRange;
     [SerializeField] private double meleeDamage;
     private double rangedDamage;
-    private float attackCooldown;
+    [SerializeField] private float attackCooldown;
     private float lastAttackTime;
     private bool isAttackRanged;
     [SerializeField] private float movementSpeed;
     private Quaternion targetRotation; // noua variabila pentru rotatia tinta
     [SerializeField] private float turnSpeed; // noua variabila pentru viteza de rotatie
-    public float armor;
+    private float armor;
     
     public event Action HpUpdate;
 
@@ -54,6 +54,18 @@ public class Player : MonoBehaviour
     void Update()
     {
 
+    }
+
+    public float AttackCooldown
+    {
+        get => attackCooldown;
+        set => attackCooldown = value;
+    }
+    public double MeleeDamage
+    {
+        get => meleeDamage;
+
+        set => meleeDamage = value;
     }
 
     public float MovementSpeed

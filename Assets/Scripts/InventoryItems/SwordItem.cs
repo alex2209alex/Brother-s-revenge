@@ -2,25 +2,28 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
 namespace InventoryItems
 {
-    [CreateAssetMenu(fileName = "ArmorItem", menuName = "Inventory/ArmorItem")]
-    public class ArmorItem : ItemData
+    [CreateAssetMenu(fileName = "SwordItem", menuName = "Inventory/SwordItem")]
+    public class SwordItem : ItemData
     {
         private bool onPlayer = false;
-        private float armorValue = 100;
+        private double damageIncrease = 0.5;
+
         public override void UseItem()
         {
             if (!onPlayer)
             {
                 onPlayer = true;
-                Inventory.Player.Armor = armorValue;
+                Inventory.Player.MeleeDamage += damageIncrease;
             }
             else
             {
                 onPlayer = false;
-                Inventory.Player.Armor = 0;
+                Inventory.Player.MeleeDamage -= damageIncrease;
             }
         }
+
     }
 }

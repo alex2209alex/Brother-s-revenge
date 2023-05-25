@@ -4,22 +4,24 @@ using UnityEngine;
 
 namespace InventoryItems
 {
-    [CreateAssetMenu(fileName = "ArmorItem", menuName = "Inventory/ArmorItem")]
-    public class ArmorItem : ItemData
+    
+    [CreateAssetMenu(fileName = "GlovesItem", menuName = "Inventory/GlovesItem")]
+    public class GlovesItem : ItemData
     {
         private bool onPlayer = false;
-        private float armorValue = 100;
+        private float attackSpeedIncrease = 2f;
+
         public override void UseItem()
         {
             if (!onPlayer)
             {
                 onPlayer = true;
-                Inventory.Player.Armor = armorValue;
+                Inventory.Player.AttackCooldown -= attackSpeedIncrease;
             }
             else
             {
                 onPlayer = false;
-                Inventory.Player.Armor = 0;
+                Inventory.Player.AttackCooldown += attackSpeedIncrease;
             }
         }
     }

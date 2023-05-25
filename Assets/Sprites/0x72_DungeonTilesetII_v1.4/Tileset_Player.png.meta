@@ -498,10 +498,10 @@ TextureImporter:
       name: Tileset_Player_18
       rect:
         serializedVersion: 2
-        x: 336
-        y: 480
-        width: 16
-        height: 32
+        x: 339
+        y: 465
+        width: 10
+        height: 21
       alignment: 9
       pivot: {x: 0.5, y: 0.1}
       border: {x: 0, y: 0, z: 0, w: 0}
