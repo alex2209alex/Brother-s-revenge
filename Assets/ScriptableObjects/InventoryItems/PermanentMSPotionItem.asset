@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6b5d2e0bba6a6147b5048214b0d701f, type: 3}
   m_Name: PermanentMSPotionItem
   m_EditorClassIdentifier: 
-  displayName: 
-  icon: {fileID: 0}
-  maxStackSize: 0
-  itemType: 
-  permanentMS_Added: 0
+  displayName: Perm.M.S.Pot.
+  icon: {fileID: -1835466287, guid: 7c9344df3a03c614fb1e2992bd427eab, type: 3}
+  maxStackSize: 3
+  itemType: Active
+  permanentMS_Added: 1
