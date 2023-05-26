@@ -23,8 +23,11 @@ public class Player : MonoBehaviour
     [SerializeField] private float movementSpeed;
     private Quaternion targetRotation; // noua variabila pentru rotatia tinta
     [SerializeField] private float turnSpeed; // noua variabila pentru viteza de rotatie
-    private float armor;
-    
+    [SerializeField] private float armor;
+    private float regenTime = 4;
+    private float timeLeftTillRegen;
+    private float hpRegenQuantity = 1;
+
     public event Action HpUpdate;
 
 
@@ -45,6 +48,7 @@ public class Player : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         animator = GetComponent<Animator>();
+        timeLeftTillRegen = regenTime;
 
         //set animatorAttack from child
         attackAnimator = transform.GetChild(0).GetComponent<Animator>();
@@ -53,7 +57,25 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        timeLeftTillRegen -= Time.deltaTime;
+        if (timeLeftTillRegen < 0)
+        {
+            if(currentHP + hpRegenQuantity > maxHP)
+                currentHP = maxHP;
+            else
+            {
+                currentHP += hpRegenQuantity;
+            }
+            HpUpdate?.Invoke();;
+            timeLeftTillRegen = regenTime;
+        }
+    }
 
+    public float HpRegenQuantity
+    {
+        get => hpRegenQuantity;
+
+        set => hpRegenQuantity = value;
     }
 
     public float AttackCooldown
