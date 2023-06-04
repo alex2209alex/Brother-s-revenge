@@ -26,6 +26,7 @@ public class Inventory : MonoBehaviour
     private InventoryItem foundItem;
     public void Add(ItemData itemData)
     {
+        Debug.Log("Adaugam un item in inventar");
         foundItem = items.FirstOrDefault(item => item.itemData == itemData && item.itemData.maxStackSize > item.stackSize);
         itemData.Inventory = this;
         if (foundItem != null)
