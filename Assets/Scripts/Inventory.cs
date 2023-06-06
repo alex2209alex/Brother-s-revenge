@@ -48,6 +48,7 @@ public class Inventory : MonoBehaviour
             itemSlot.ItemName.text = newItem.itemData.displayName;
             itemSlot.ItemIcon.sprite = newItem.itemData.icon;
             itemSlot.ItemStackSize.text = newItem.stackSize.ToString();
+            itemSlot.ItemType = newItem.itemData.itemType;
             EnableItemsRemove();
             Debug.Log($"Added {itemData.displayName} to the inventory for the first time");
         }

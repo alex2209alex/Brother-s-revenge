@@ -428,7 +428,7 @@ Transform:
   m_Children:
   - {fileID: 1852188512}
   m_Father: {fileID: 552253868}
-  m_RootOrder: 4
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -0.043}
 --- !u!95 &129531927
 Animator:
@@ -518,7 +518,22 @@ MonoBehaviour:
   isOpen: 0
   stateOfChest: 0
   animator: {fileID: 129531927}
+  armor: {fileID: 11400000, guid: 03ce9a77e67057647acf928ff5f43218, type: 2}
+  sword: {fileID: 11400000, guid: bb30f3c9f6fa80b43a4294fadc13317e, type: 2}
+  attackSpeedPotion: {fileID: 11400000, guid: 0a6761f4476baac4caac92f54c5831f4, type: 2}
+  boots: {fileID: 11400000, guid: 61fadc3ea2f9ab748aa4d15fd05f5b6a, type: 2}
+  coin: {fileID: 11400000, guid: b71145da5a19d7049a0785b2e22f2be1, type: 2}
+  gloves: {fileID: 11400000, guid: 1cbba0e88ab3df44b90df5b64d9698b2, type: 2}
+  damagePotion: {fileID: 11400000, guid: 1bf73fc8f3f57a540bccaf255e9e1b5c, type: 2}
+  hpPotion: {fileID: 11400000, guid: dd5d2e4b818129e43a4248ddebd581b2, type: 2}
+  hpRegenPotion: {fileID: 11400000, guid: cc1bc1e3013a07e41a80156bab92d028, type: 2}
+  permanentAsPotion: {fileID: 11400000, guid: b892d0a092395794facfe32e4f303b04, type: 2}
+  permanentDmgPotion: {fileID: 11400000, guid: 19c42b42f0ffc6448a1271117568d81e, type: 2}
+  permanentMsPotion: {fileID: 11400000, guid: 1ebe7307fb76acd4fa6a473f42801c34, type: 2}
+  speedPotion: {fileID: 11400000, guid: 09534d9c7fc682c498d99cb4561caf22, type: 2}
+  inventory: {fileID: 4173024}
   items: []
+  itemsInChest: []
 --- !u!61 &129531930
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1295,6 +1310,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1636901545}
   - {fileID: 2049759847}
   - {fileID: 1285427792}
   - {fileID: 1502714604}
@@ -2280,7 +2296,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 552253868}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0.301}
 --- !u!19719996 &1084360110
 TilemapCollider2D:
@@ -2554,6 +2570,67 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1094648562}
   m_CullTransparentMesh: 1
+--- !u!1001 &1172054621
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 552253868}
+    m_Modifications:
+    - target: {fileID: -3813214317307212914, guid: c00ee328e01dda1488dc3f11162294a8, type: 3}
+      propertyPath: inventory
+      value: 
+      objectReference: {fileID: 4173024}
+    - target: {fileID: 4796361208330000288, guid: c00ee328e01dda1488dc3f11162294a8, type: 3}
+      propertyPath: m_Name
+      value: Chest (3)
+      objectReference: {fileID: 0}
+    - target: {fileID: 7715140992693292773, guid: c00ee328e01dda1488dc3f11162294a8, type: 3}
+      propertyPath: m_RootOrder
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7715140992693292773, guid: c00ee328e01dda1488dc3f11162294a8, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -7.22
+      objectReference: {fileID: 0}
+    - target: {fileID: 7715140992693292773, guid: c00ee328e01dda1488dc3f11162294a8, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7715140992693292773, guid: c00ee328e01dda1488dc3f11162294a8, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7715140992693292773, guid: c00ee328e01dda1488dc3f11162294a8, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7715140992693292773, guid: c00ee328e01dda1488dc3f11162294a8, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7715140992693292773, guid: c00ee328e01dda1488dc3f11162294a8, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7715140992693292773, guid: c00ee328e01dda1488dc3f11162294a8, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7715140992693292773, guid: c00ee328e01dda1488dc3f11162294a8, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7715140992693292773, guid: c00ee328e01dda1488dc3f11162294a8, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7715140992693292773, guid: c00ee328e01dda1488dc3f11162294a8, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: c00ee328e01dda1488dc3f11162294a8, type: 3}
 --- !u!1 &1202602543
 GameObject:
   m_ObjectHideFlags: 0
@@ -2856,7 +2933,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 552253868}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!66 &1285427793
 CompositeCollider2D:
@@ -3653,7 +3730,7 @@ Transform:
   m_Children:
   - {fileID: 517510386}
   m_Father: {fileID: 552253868}
-  m_RootOrder: 6
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -0.043}
 --- !u!114 &1405447332
 MonoBehaviour:
@@ -3670,7 +3747,22 @@ MonoBehaviour:
   isOpen: 0
   stateOfChest: 0
   animator: {fileID: 1405447333}
+  armor: {fileID: 0}
+  sword: {fileID: 0}
+  attackSpeedPotion: {fileID: 0}
+  boots: {fileID: 0}
+  coin: {fileID: 0}
+  gloves: {fileID: 0}
+  damagePotion: {fileID: 0}
+  hpPotion: {fileID: 0}
+  hpRegenPotion: {fileID: 0}
+  permanentAsPotion: {fileID: 0}
+  permanentDmgPotion: {fileID: 0}
+  permanentMsPotion: {fileID: 0}
+  speedPotion: {fileID: 0}
+  inventory: {fileID: 0}
   items: []
+  itemsInChest: []
 --- !u!95 &1405447333
 Animator:
   serializedVersion: 5
@@ -3825,7 +3917,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 552253868}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!483693784 &1502714605
 TilemapRenderer:
@@ -4674,7 +4766,7 @@ Transform:
   m_Children:
   - {fileID: 588358171}
   m_Father: {fileID: 552253868}
-  m_RootOrder: 5
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -0.043}
 --- !u!114 &1634347248
 MonoBehaviour:
@@ -4691,7 +4783,22 @@ MonoBehaviour:
   isOpen: 0
   stateOfChest: 0
   animator: {fileID: 1634347249}
+  armor: {fileID: 0}
+  sword: {fileID: 0}
+  attackSpeedPotion: {fileID: 0}
+  boots: {fileID: 0}
+  coin: {fileID: 0}
+  gloves: {fileID: 0}
+  damagePotion: {fileID: 0}
+  hpPotion: {fileID: 0}
+  hpRegenPotion: {fileID: 0}
+  permanentAsPotion: {fileID: 0}
+  permanentDmgPotion: {fileID: 0}
+  permanentMsPotion: {fileID: 0}
+  speedPotion: {fileID: 0}
+  inventory: {fileID: 0}
   items: []
+  itemsInChest: []
 --- !u!95 &1634347249
 Animator:
   serializedVersion: 5
@@ -4812,6 +4919,11 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 1
+--- !u!4 &1636901545 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7715140992693292773, guid: c00ee328e01dda1488dc3f11162294a8, type: 3}
+  m_PrefabInstance: {fileID: 1172054621}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1759117935
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5595,7 +5707,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 552253868}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0.161}
 --- !u!483693784 &2049759848
 TilemapRenderer:

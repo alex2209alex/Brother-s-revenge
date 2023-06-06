@@ -4,17 +4,30 @@ using UnityEngine;
 using InventoryItems;
 public class ChestController : MonoBehaviour
 {
-    public bool isOpen;
-    public float stateOfChest;
-    public Animator animator;
+    [SerializeField] private bool isOpen;
+    [SerializeField] private float stateOfChest;
+    [SerializeField] private Animator animator;
+    [SerializeField] private ArmorItem armor;
+    [SerializeField] private SwordItem sword ;
+    [SerializeField] private AttackSpeedPotionItem attackSpeedPotion ;
+    [SerializeField] private BootsItem boots ;
+    [SerializeField] private CoinItem coin ;
+    [SerializeField] private GlovesItem gloves ;
+    [SerializeField] private DamagePotion damagePotion ;
+    [SerializeField] private HPPotionItem hpPotion ;
+    [SerializeField] private HpRegenPotionItem hpRegenPotion ;
+    [SerializeField] private PermanentASPotionItem permanentAsPotion ;
+    [SerializeField] private PermanentDmgPotionItem permanentDmgPotion ;
+    [SerializeField] private PermanentMSPotionItem permanentMsPotion ;
+    [SerializeField] private SpeedPotionItem speedPotion ;
     public bool IsOpen
     {
         get { return isOpen; }
         set { isOpen = value; }
     }
-    public Inventory inventory;
-    public List<ItemData> items = new List<ItemData>();
-    public List<ItemData> itemsInChest = new List<ItemData>();
+    [SerializeField] private Inventory inventory;
+    [SerializeField] List<ItemData> items = new List<ItemData>();
+    [SerializeField] List<ItemData> itemsInChest = new List<ItemData>();
     public List<ItemData> Items
     {
         get { return items; }
@@ -36,6 +49,7 @@ public class ChestController : MonoBehaviour
     }
     public void populateList()
     {
+        /*
         ArmorItem armor = ScriptableObject.CreateInstance<ArmorItem>();
         SwordItem sword = ScriptableObject.CreateInstance<SwordItem>();
         AttackSpeedPotionItem attackSpeedPotion = ScriptableObject.CreateInstance<AttackSpeedPotionItem>();
@@ -49,6 +63,7 @@ public class ChestController : MonoBehaviour
         PermanentDmgPotionItem permanentDmgPotion = ScriptableObject.CreateInstance<PermanentDmgPotionItem>();
         PermanentMSPotionItem permanentMsPotion = ScriptableObject.CreateInstance<PermanentMSPotionItem>();
         SpeedPotionItem speedPotion = ScriptableObject.CreateInstance<SpeedPotionItem>();
+        */
         // SpeedPotionItem speedPotion  = InventoryItems<SpeedPotionItem>("ScriptableObjects/InventoryItems/SpeedPotionItem");
         items.Add(sword);
         items.Add(attackSpeedPotion);
