@@ -12,6 +12,7 @@ public class DungeonGenerationScript : MonoBehaviour
     public float extraEdgesPercentage = 0.15f;
     public float aspectRatioWeight = 0f;
     public float chanceTileFloor01, chanceTileFloor02;
+    public int startingRoom;
     public int meanWidth, stdDevWidth, minWidth, maxWidth;
     public int meanHeight, stdDevHeight, minHeight, maxHeight;
 
@@ -23,6 +24,7 @@ public class DungeonGenerationScript : MonoBehaviour
     private bool dungeonBuilt = false;
     List<GameObject> sortedRectangles;
 
+    public GameObject Player;
     public int numLines;
     public Vector2[] startPoints;
     public Vector2[] endPoints;
@@ -32,12 +34,15 @@ public class DungeonGenerationScript : MonoBehaviour
     public int sortingOrder = 100;
     private LineRenderer[] lineRenderers;
     private Delaunator delaunator;
+    Vector3 tileSize = new Vector3(1,1,1);
 
     public Tilemap tilemapFloor, tilemapFloorWalls, tilemapDecoratives, tilemapWalls;
     public Tile tileFloor01, tileBricks01, tileWallUpper, tileWallUpperLeft, tileWallUpperRight, tileWallLowerLeft, tileWallLowerRight, tileWallLeft, tileWallRight;
     public Tile tileFloor02, tileFloor03;
     public Tile tileCornerUpperLeft, tileCornerUpperRight, tileCornerLowerLeft, tileCornerLowerRight, tileCorner02LowerLeft, tileCorner02LowerRight;
     public Tile tileBricks02, tileBricks03;
+
+    Dictionary<int, HashSet<int>> graphFinal = new Dictionary<int, HashSet<int>>();
 
     Sprite CreateRectangleSprite(float width, float height)
     {
@@ -267,6 +272,902 @@ public class DungeonGenerationScript : MonoBehaviour
         return thirdGraph;
     }
 
+    void DFS(int currentNode, Dictionary<int, HashSet<int>> graph, HashSet<int> visited, HashSet<int> component)
+    {
+        visited.Add(currentNode);
+        component.Add(currentNode);
+
+        foreach (int neighborNode in graph[currentNode])
+        {
+            if (!visited.Contains(neighborNode))
+            {
+                DFS(neighborNode, graph, visited, component);
+            }
+        }
+    }
+    void generateHallways(Dictionary<int, HashSet<int>> extraEdgesGraph, HashSet<string> nodePairs, bool initialBuild, int buildStep = 0)
+    {
+        List<HashSet<int>> connectedComponents = new List<HashSet<int>>();
+        if (!initialBuild)
+        {
+            HashSet<int> visitedNodes = new HashSet<int>();
+
+            foreach (var nodePair2 in graphFinal)
+            {
+                int fromNode2 = nodePair2.Key;
+
+                if (visitedNodes.Contains(fromNode2))
+                    continue;
+
+                HashSet<int> currentComponent = new HashSet<int>();
+                DFS(fromNode2, graphFinal, visitedNodes, currentComponent);
+                connectedComponents.Add(currentComponent);
+            }
+
+            connectedComponents.Sort((a, b) => b.Count.CompareTo(a.Count));
+            foreach (HashSet<int> component in connectedComponents)
+            {
+                string componentString = "Connected Component: ";
+                foreach (int node in component)
+                {
+                    componentString += node.ToString() + " ";
+                }
+                Debug.Log(componentString);
+            }
+            if (buildStep == connectedComponents.Count) return;
+        }
+
+        foreach (var nodePair in extraEdgesGraph)
+        {
+            int fromNode = nodePair.Key;
+            foreach (int toNode in (initialBuild ? nodePair.Value: connectedComponents[buildStep]))
+            {
+                Debug.Log("Try: " + fromNode + " " + toNode);
+                if (nodePairs.Contains($"{toNode},{fromNode}") || nodePairs.Contains($"{fromNode},{toNode}"))
+                {
+                    continue;
+                }
+
+                Rigidbody2D rb1 = sortedRectangles[fromNode].GetComponent<Rigidbody2D>();
+                Vector3Int startPos1 = tilemapFloor.WorldToCell(rb1.position);
+                Rigidbody2D rb2 = sortedRectangles[toNode].GetComponent<Rigidbody2D>();
+                Vector3Int startPos2 = tilemapFloor.WorldToCell(rb2.position);
+
+                Vector3Int sizeInTiles1 = new Vector3Int(
+                    Mathf.RoundToInt(rb1.GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
+                    Mathf.RoundToInt(rb1.GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
+                    1);
+                Vector3Int sizeInTiles2 = new Vector3Int(
+                    Mathf.RoundToInt(rb2.GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
+                    Mathf.RoundToInt(rb2.GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
+                    1);
+
+                bool builtL = false;
+                bool builtN = false;
+
+                if (startPos1.x < startPos2.x)
+                {
+                    bool case_orientation = true;
+                    if (startPos1.y > startPos2.y)
+                    {
+                        case_orientation = false;
+                    }
+
+                    if ((case_orientation && startPos1.y <= startPos2.y && startPos2.y < startPos1.y + sizeInTiles1.y - 6) || (!case_orientation && startPos1.y > startPos2.y && startPos1.y < startPos2.y + sizeInTiles2.y - 6))
+                    {
+                        Vector3Int startPosOffset = case_orientation ? startPos2 : startPos1;
+                        int startPosOffsetExtra = case_orientation ? 0 : startPos2.x - startPos1.x;
+
+                        bool intersectionN = false;
+                        for (int i = 0; i <= startPos2.x - startPos1.x - sizeInTiles1.x + 1; ++i)
+                        {
+                            int offset = case_orientation ? i * -1 : i + sizeInTiles1.x - 1;
+
+                            if (tilemapFloor.GetTile(startPosOffset + new Vector3Int(offset, 3, 0)) != null)
+                            {
+                                intersectionN = true;
+                                break;
+                            }
+                            if (tilemapFloor.GetTile(startPosOffset + new Vector3Int(offset, 4, 0)) != null)
+                            {
+                                intersectionN = true;
+                                break;
+                            }
+
+                            if (i == 0 || i == startPos2.x - startPos1.x - sizeInTiles1.x + 1) continue;
+                            if (tilemapWalls.GetTile(startPosOffset + new Vector3Int(offset, 2, 0)) != null)
+                            {
+                                intersectionN = true;
+                                break;
+                            }
+                            if (tilemapFloorWalls.GetTile(startPosOffset + new Vector3Int(offset, 2, 0)) != null)
+                            {
+                                intersectionN = true;
+                                break;
+                            }
+                            if (tilemapWalls.GetTile(startPosOffset + new Vector3Int(offset, 3, 0)) != null)
+                            {
+                                intersectionN = true;
+                                break;
+                            }
+                            if (tilemapFloorWalls.GetTile(startPosOffset + new Vector3Int(offset, 3, 0)) != null)
+                            {
+                                intersectionN = true;
+                                break;
+                            }
+                            if (tilemapWalls.GetTile(startPosOffset + new Vector3Int(offset, 5, 0)) != null)
+                            {
+                                intersectionN = true;
+                                break;
+                            }
+                            if (tilemapFloorWalls.GetTile(startPosOffset + new Vector3Int(offset, 5, 0)) != null)
+                            {
+                                intersectionN = true;
+                                break;
+                            }
+                            if (tilemapWalls.GetTile(startPosOffset + new Vector3Int(offset, 6, 0)) != null)
+                            {
+                                intersectionN = true;
+                                break;
+                            }
+                            if (tilemapFloorWalls.GetTile(startPosOffset + new Vector3Int(offset, 6, 0)) != null)
+                            {
+                                intersectionN = true;
+                                break;
+                            }
+                        }
+
+                        if (!intersectionN)
+                        {
+                            for (int i = 0; i <= startPos2.x - startPos1.x - sizeInTiles1.x + 1; ++i)
+                            {
+                                int offset = case_orientation ? i * -1 : i + sizeInTiles1.x - 1;
+
+                                Vector3Int tilePos = startPosOffset + new Vector3Int(offset, 3, 0);
+                                TileBase tileToPaint = getRandomTileFloor();
+                                tilemapFloor.SetTile(tilePos, tileToPaint);
+
+                                tilePos = startPosOffset + new Vector3Int(offset, 4, 0);
+                                tileToPaint = getRandomTileFloor();
+                                tilemapFloor.SetTile(tilePos, tileToPaint);
+
+                                tilePos = startPosOffset + new Vector3Int(offset, 3, 0);
+                                tileToPaint = tileWallUpper;
+                                tilemapWalls.SetTile(tilePos, tileToPaint);
+
+                                tilePos = startPosOffset + new Vector3Int(offset, 6, 0);
+                                tileToPaint = tileWallUpper;
+                                tilemapWalls.SetTile(tilePos, tileToPaint);
+
+                                tilePos = startPosOffset + new Vector3Int(offset, 5, 0);
+                                tileToPaint = tileBricks01;
+                                tilemapFloorWalls.SetTile(tilePos, tileToPaint);
+
+                                tilePos = startPosOffset + new Vector3Int(offset, 2, 0);
+                                tileToPaint = tileBricks01;
+                                tilemapWalls.SetTile(tilePos, tileToPaint);
+                            }
+
+                            Vector3Int tilePos2 = startPosOffset + new Vector3Int(0, 6, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                            TileBase tileToPaint2 = tileCornerUpperLeft;
+                            tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                            tilePos2 = startPosOffset + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 6, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                            tileToPaint2 = tileCornerUpperRight;
+                            tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                            tilePos2 = startPosOffset + new Vector3Int(0, 5, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                            tilemapWalls.SetTile(tilePos2, null);
+                            tilePos2 = startPosOffset + new Vector3Int(0, 4, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                            tilemapWalls.SetTile(tilePos2, null);
+
+                            tilePos2 = startPosOffset + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 5, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                            tilemapWalls.SetTile(tilePos2, null);
+                            tilePos2 = startPosOffset + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 4, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                            tilemapWalls.SetTile(tilePos2, null);
+
+                            tilePos2 = startPosOffset + new Vector3Int(0, 5, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                            tileToPaint2 = tileBricks03;
+                            tilemapFloorWalls.SetTile(tilePos2, tileToPaint2);
+
+                            tilePos2 = startPosOffset + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 5, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                            tileToPaint2 = tileBricks02;
+                            tilemapFloorWalls.SetTile(tilePos2, tileToPaint2);
+
+                            tilePos2 = startPosOffset + new Vector3Int(0, 2, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                            tileToPaint2 = tileCornerLowerRight;
+                            tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                            tilePos2 = startPosOffset + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 2, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                            tileToPaint2 = tileCornerLowerLeft;
+                            tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                            tilePos2 = startPosOffset + new Vector3Int(0, 3, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                            tileToPaint2 = tileCorner02LowerRight;
+                            tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                            tilePos2 = startPosOffset + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 3, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
+                            tileToPaint2 = tileCorner02LowerLeft;
+                            tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                            builtN = true;
+                            nodePairs.Add($"{fromNode},{toNode}");
+                            if (!graphFinal.ContainsKey(fromNode))
+                            {
+                                graphFinal[fromNode] = new HashSet<int>();
+                            }
+                            if (!graphFinal.ContainsKey(toNode))
+                            {
+                                graphFinal[toNode] = new HashSet<int>();
+                            }
+                            graphFinal[fromNode].Add(toNode);
+                            graphFinal[toNode].Add(fromNode);
+
+                            if (!initialBuild)
+                            {
+                                Debug.Log("Changed graph.");
+                                generateHallways(extraEdgesGraph, nodePairs, false, 1);
+                                return;
+                            }
+                            continue;
+                        }
+                    }
+
+                    if (builtN) continue;
+                    if (case_orientation && startPos1.y <= startPos2.y)
+                    {
+                        float randomNumber = Random.value;
+                        for (int j = 0; j < 2; ++j)
+                        {
+                            if (randomNumber > 0.5f)
+                            {
+                                for (int startL = startPos2.y + 4; startL < startPos2.y + sizeInTiles2.y - 3; ++startL)
+                                {
+                                    for (int endL = startPos1.x + sizeInTiles1.x - 4; endL > startPos1.x + 1; --endL)
+                                    {
+                                        bool intersectionL = false;
+                                        for (int i = startPos2.x; i >= endL; --i)
+                                        {
+                                            if (tilemapFloor.GetTile(new Vector3Int(i, startL, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapFloor.GetTile(new Vector3Int(i, startL - 1, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+
+                                            if (i == startPos2.x) continue;
+
+                                            if (tilemapWalls.GetTile(new Vector3Int(i, startL + 2, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapFloorWalls.GetTile(new Vector3Int(i, startL + 2, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapWalls.GetTile(new Vector3Int(i, startL - 1, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapFloorWalls.GetTile(new Vector3Int(i, startL - 1, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapWalls.GetTile(new Vector3Int(i, startL + 1, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapFloorWalls.GetTile(new Vector3Int(i, startL + 1, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapWalls.GetTile(new Vector3Int(i, startL - 2, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapFloorWalls.GetTile(new Vector3Int(i, startL - 2, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                        }
+
+                                        if (intersectionL) continue;
+                                        for (int i = startPos1.y + sizeInTiles1.y - 1; i <= startL; ++i)
+                                        {
+                                            if (tilemapFloor.GetTile(new Vector3Int(endL, i, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapFloor.GetTile(new Vector3Int(endL + 1, i, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+
+                                            if (i == startPos1.y + sizeInTiles1.y || i == startPos1.y + sizeInTiles1.y - 1) continue;
+
+                                            if (tilemapWalls.GetTile(new Vector3Int(endL - 1, i, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapFloorWalls.GetTile(new Vector3Int(endL - 1, i, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapWalls.GetTile(new Vector3Int(endL + 2, i, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapFloorWalls.GetTile(new Vector3Int(endL + 2, i, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                        }
+                                        if (intersectionL) continue;
+
+                                        for (int i = startPos2.x; i >= endL; --i)
+                                        {
+                                            Vector3Int tilePos = new Vector3Int(i, startL, 0);
+                                            TileBase tileToPaint = getRandomTileFloor();
+                                            tilemapFloor.SetTile(tilePos, tileToPaint);
+
+                                            tilePos = new Vector3Int(i, startL - 1, 0);
+                                            tileToPaint = getRandomTileFloor();
+                                            tilemapFloor.SetTile(tilePos, tileToPaint);
+
+                                            tilePos = new Vector3Int(i, startL + 2, 0);
+                                            tileToPaint = tileWallUpper;
+                                            tilemapWalls.SetTile(tilePos, tileToPaint);
+
+                                            tilePos = new Vector3Int(i, startL + 1, 0);
+                                            tileToPaint = tileBricks01;
+                                            tilemapFloorWalls.SetTile(tilePos, tileToPaint);
+
+                                            if (i == endL + 1 || i == endL) continue;
+                                            tilePos = new Vector3Int(i, startL - 1, 0);
+                                            tileToPaint = tileWallUpper;
+                                            tilemapWalls.SetTile(tilePos, tileToPaint);
+
+                                            tilePos = new Vector3Int(i, startL - 2, 0);
+                                            tileToPaint = tileBricks01;
+                                            tilemapWalls.SetTile(tilePos, tileToPaint);
+                                        }
+
+                                        for (int i = startPos1.y + sizeInTiles1.y - 1; i <= startL; ++i)
+                                        {
+                                            Vector3Int tilePos = new Vector3Int(endL, i, 0);
+                                            TileBase tileToPaint = getRandomTileFloor();
+                                            tilemapFloor.SetTile(tilePos, tileToPaint);
+
+                                            tilePos = new Vector3Int(endL + 1, i, 0);
+                                            tileToPaint = getRandomTileFloor();
+                                            tilemapFloor.SetTile(tilePos, tileToPaint);
+
+                                            if (i != startPos1.y + sizeInTiles1.y - 1)
+                                            {
+                                                tilePos = new Vector3Int(endL - 1, i, 0);
+                                                tileToPaint = tileWallLeft;
+                                                tilemapWalls.SetTile(tilePos, tileToPaint);
+
+                                                if (i == startL - 1 || i == startL || i == startL + 1) continue;
+                                                tilePos = new Vector3Int(endL + 2, i, 0);
+                                                tileToPaint = tileWallRight;
+                                                tilemapWalls.SetTile(tilePos, tileToPaint);
+                                            }
+                                        }
+
+                                        Vector3Int tilePos2 = new Vector3Int(endL - 1, startL + 2, 0);
+                                        TileBase tileToPaint2 = tileWallUpperLeft;
+                                        tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                        tilePos2 = new Vector3Int(endL - 1, startL + 1, 0);
+                                        tileToPaint2 = tileWallLeft;
+                                        tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                        tilePos2 = new Vector3Int(endL + 2, startPos1.y + sizeInTiles1.y, 0);
+                                        tileToPaint2 = tileCornerUpperRight;
+                                        tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                        tilePos2 = new Vector3Int(endL + 2, startPos1.y + sizeInTiles1.y - 1, 0);
+                                        tileToPaint2 = tileBricks02;
+                                        tilemapFloorWalls.SetTile(tilePos2, tileToPaint2);
+
+                                        tilePos2 = new Vector3Int(endL - 1, startPos1.y + sizeInTiles1.y, 0);
+                                        tileToPaint2 = tileCornerUpperLeft;
+                                        tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                        tilePos2 = new Vector3Int(endL - 1, startPos1.y + sizeInTiles1.y - 1, 0);
+                                        tileToPaint2 = tileBricks03;
+                                        tilemapFloorWalls.SetTile(tilePos2, tileToPaint2);
+
+                                        tilePos2 = new Vector3Int(endL + 2, startL - 1, 0);
+                                        tileToPaint2 = tileCorner02LowerLeft;
+                                        tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                        tilePos2 = new Vector3Int(endL + 2, startL - 2, 0);
+                                        tileToPaint2 = tileCornerLowerLeft;
+                                        tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                        tilePos2 = new Vector3Int(startPos2.x, startL - 1, 0);
+                                        tileToPaint2 = tileCorner02LowerRight;
+                                        tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                        tilePos2 = new Vector3Int(startPos2.x, startL - 2, 0);
+                                        tileToPaint2 = tileCornerLowerRight;
+                                        tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                        tilePos2 = new Vector3Int(startPos2.x, startL + 1, 0);
+                                        tileToPaint2 = tileBricks03;
+                                        tilemapFloorWalls.SetTile(tilePos2, tileToPaint2);
+
+                                        tilePos2 = new Vector3Int(startPos2.x, startL + 2, 0);
+                                        tileToPaint2 = tileCornerUpperLeft;
+                                        tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                        tilePos2 = new Vector3Int(endL, startPos1.y + sizeInTiles1.y, 0);
+                                        tilemapWalls.SetTile(tilePos2, null);
+
+                                        tilePos2 = new Vector3Int(endL + 1, startPos1.y + sizeInTiles1.y, 0);
+                                        tilemapWalls.SetTile(tilePos2, null);
+
+                                        tilePos2 = new Vector3Int(endL, startPos1.y + sizeInTiles1.y - 1, 0);
+                                        tilemapFloorWalls.SetTile(tilePos2, null);
+
+                                        tilePos2 = new Vector3Int(endL + 1, startPos1.y + sizeInTiles1.y - 1, 0);
+                                        tilemapFloorWalls.SetTile(tilePos2, null);
+
+                                        tilePos2 = new Vector3Int(startPos2.x, startL, 0);
+                                        tilemapWalls.SetTile(tilePos2, null);
+
+                                        tilePos2 = new Vector3Int(startPos2.x, startL + 1, 0);
+                                        tilemapWalls.SetTile(tilePos2, null);
+
+                                        nodePairs.Add($"{fromNode},{toNode}");
+                                        if (!graphFinal.ContainsKey(fromNode))
+                                        {
+                                            graphFinal[fromNode] = new HashSet<int>();
+                                        }
+                                        if (!graphFinal.ContainsKey(toNode))
+                                        {
+                                            graphFinal[toNode] = new HashSet<int>();
+                                        }
+                                        graphFinal[fromNode].Add(toNode);
+                                        graphFinal[toNode].Add(fromNode);
+                                        Debug.Log("TWO");
+                                        builtL = true;
+                                        if (!initialBuild)
+                                        {
+                                            Debug.Log("Changed graph.");
+                                            generateHallways(extraEdgesGraph, nodePairs, false, 1);
+                                            return;
+                                        }
+                                        break;
+                                    }
+                                    if (builtL) break;
+                                }
+                            }
+                            else
+                            {
+                                if (builtL) break;
+                                for (int startL = startPos1.y + sizeInTiles1.y - 3; startL > startPos1.y + 5; --startL)
+                                {
+                                    for (int endL = startPos2.x + 2; endL < startPos2.x + sizeInTiles2.x - 3; ++endL)
+                                    {
+                                        bool intersectionL = false;
+                                        for (int i = startPos1.x + sizeInTiles1.x - 1; i <= endL + 2; ++i)
+                                        {
+                                            if (tilemapFloor.GetTile(new Vector3Int(i, startL, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapFloor.GetTile(new Vector3Int(i, startL - 1, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+
+                                            if (i == startPos1.x + sizeInTiles1.x - 1 || i == startPos1.x + sizeInTiles1.x - 2) continue;
+
+                                            if (tilemapWalls.GetTile(new Vector3Int(i, startL + 2, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapFloorWalls.GetTile(new Vector3Int(i, startL + 2, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapWalls.GetTile(new Vector3Int(i, startL - 1, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapFloorWalls.GetTile(new Vector3Int(i, startL - 1, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapWalls.GetTile(new Vector3Int(i, startL + 1, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapFloorWalls.GetTile(new Vector3Int(i, startL + 1, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapWalls.GetTile(new Vector3Int(i, startL - 2, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapFloorWalls.GetTile(new Vector3Int(i, startL - 2, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                        }
+                                        if (intersectionL) continue;
+
+                                        for (int i = startPos2.y; i >= startL - 1; --i)
+                                        {
+                                            if (tilemapFloor.GetTile(new Vector3Int(endL, i, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapFloor.GetTile(new Vector3Int(endL + 1, i, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+
+                                            if (i == startPos2.y) continue;
+
+                                            if (tilemapWalls.GetTile(new Vector3Int(endL - 1, i, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapFloorWalls.GetTile(new Vector3Int(endL - 1, i, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapWalls.GetTile(new Vector3Int(endL + 2, i, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                            if (tilemapFloorWalls.GetTile(new Vector3Int(endL + 2, i, 0)) != null)
+                                            {
+                                                intersectionL = true;
+                                                break;
+                                            }
+                                        }
+                                        if (intersectionL) continue;
+
+                                        for (int i = startPos1.x + sizeInTiles1.x - 1; i <= endL + 1; ++i)
+                                        {
+                                            Vector3Int tilePos = new Vector3Int(i, startL, 0);
+                                            TileBase tileToPaint = getRandomTileFloor();
+                                            tilemapFloor.SetTile(tilePos, tileToPaint);
+
+                                            tilePos = new Vector3Int(i, startL - 1, 0);
+                                            tileToPaint = getRandomTileFloor();
+                                            tilemapFloor.SetTile(tilePos, tileToPaint);
+
+                                            tilePos = new Vector3Int(i, startL - 1, 0);
+                                            tileToPaint = tileWallUpper;
+                                            tilemapWalls.SetTile(tilePos, tileToPaint);
+
+                                            tilePos = new Vector3Int(i, startL - 2, 0);
+                                            tileToPaint = tileBricks01;
+                                            tilemapWalls.SetTile(tilePos, tileToPaint);
+
+                                            if (i == endL + 1 || i == endL) continue;
+                                            tilePos = new Vector3Int(i, startL + 2, 0);
+                                            tileToPaint = tileWallUpper;
+                                            tilemapWalls.SetTile(tilePos, tileToPaint);
+
+                                            tilePos = new Vector3Int(i, startL + 1, 0);
+                                            tileToPaint = tileBricks01;
+                                            tilemapFloorWalls.SetTile(tilePos, tileToPaint);
+                                        }
+
+                                        for (int i = startPos2.y + 1; i >= startL - 1; --i)
+                                        {
+                                            Vector3Int tilePos = new Vector3Int(endL, i, 0);
+                                            TileBase tileToPaint = getRandomTileFloor();
+                                            tilemapFloor.SetTile(tilePos, tileToPaint);
+
+                                            tilePos = new Vector3Int(endL + 1, i, 0);
+                                            tileToPaint = getRandomTileFloor();
+                                            tilemapFloor.SetTile(tilePos, tileToPaint);
+
+                                            tilePos = new Vector3Int(endL + 2, i, 0);
+                                            tileToPaint = tileWallRight;
+                                            tilemapWalls.SetTile(tilePos, tileToPaint);
+
+                                            if (i == startL - 1 || i == startL || i == startL + 1) continue;
+                                            tilePos = new Vector3Int(endL - 1, i, 0);
+                                            tileToPaint = tileWallLeft;
+                                            tilemapWalls.SetTile(tilePos, tileToPaint);
+                                        }
+
+                                        Vector3Int tilePos2 = new Vector3Int(endL - 1, startL + 2, 0);
+                                        TileBase tileToPaint2 = tileCornerUpperLeft;
+                                        tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                        tilePos2 = new Vector3Int(endL - 1, startL + 1, 0);
+                                        tileToPaint2 = tileBricks03;
+                                        tilemapFloorWalls.SetTile(tilePos2, tileToPaint2);
+
+                                        tilePos2 = new Vector3Int(startPos1.x + sizeInTiles1.x - 1, startL - 1, 0);
+                                        tileToPaint2 = tileCorner02LowerLeft;
+                                        tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                        tilePos2 = new Vector3Int(startPos1.x + sizeInTiles1.x - 1, startL + 2, 0);
+                                        tileToPaint2 = tileCornerUpperRight;
+                                        tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                        tilePos2 = new Vector3Int(startPos1.x + sizeInTiles1.x - 1, startL + 1, 0);
+                                        tilemapWalls.SetTile(tilePos2, null);
+
+                                        tilePos2 = new Vector3Int(startPos1.x + sizeInTiles1.x - 1, startL, 0);
+                                        tilemapWalls.SetTile(tilePos2, null);
+
+                                        tilePos2 = new Vector3Int(startPos1.x + sizeInTiles1.x - 1, startL + 1, 0);
+                                        tileToPaint2 = tileBricks02;
+                                        tilemapFloorWalls.SetTile(tilePos2, tileToPaint2);
+
+                                        tilePos2 = new Vector3Int(startPos1.x + sizeInTiles1.x - 1, startL - 2, 0);
+                                        tileToPaint2 = tileCornerLowerLeft;
+                                        tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                        tilePos2 = new Vector3Int(endL + 2, startL - 2, 0);
+                                        tileToPaint2 = tileWallLowerRight;
+                                        tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                        tilePos2 = new Vector3Int(endL - 1, startPos2.y + 2, 0);
+                                        tileToPaint2 = tileCorner02LowerRight;
+                                        tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                        tilePos2 = new Vector3Int(endL - 1, startPos2.y + 1, 0);
+                                        tileToPaint2 = tileCornerLowerRight;
+                                        tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                        tilePos2 = new Vector3Int(endL + 2, startPos2.y + 2, 0);
+                                        tileToPaint2 = tileCorner02LowerLeft;
+                                        tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                        tilePos2 = new Vector3Int(endL + 2, startPos2.y + 1, 0);
+                                        tileToPaint2 = tileCornerLowerLeft;
+                                        tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                                        tilePos2 = new Vector3Int(endL, startPos2.y + 2, 0);
+                                        tilemapWalls.SetTile(tilePos2, null);
+
+                                        tilePos2 = new Vector3Int(endL, startPos2.y + 1, 0);
+                                        tilemapWalls.SetTile(tilePos2, null);
+
+                                        tilePos2 = new Vector3Int(endL + 1, startPos2.y + 2, 0);
+                                        tilemapWalls.SetTile(tilePos2, null);
+
+                                        tilePos2 = new Vector3Int(endL + 1, startPos2.y + 1, 0);
+                                        tilemapWalls.SetTile(tilePos2, null);
+
+                                        nodePairs.Add($"{fromNode},{toNode}");
+                                        if (!graphFinal.ContainsKey(fromNode))
+                                        {
+                                            graphFinal[fromNode] = new HashSet<int>();
+                                        }
+                                        if (!graphFinal.ContainsKey(toNode))
+                                        {
+                                            graphFinal[toNode] = new HashSet<int>();
+                                        }
+                                        graphFinal[fromNode].Add(toNode);
+                                        graphFinal[toNode].Add(fromNode);
+                                        Debug.Log("ONE");
+                                        builtL = true;
+                                        if (!initialBuild)
+                                        {
+                                            Debug.Log("Changed graph.");
+                                            generateHallways(extraEdgesGraph, nodePairs, false, 1);
+                                            return;
+                                        }
+                                        break;
+                                    }
+                                    if (builtL) break;
+                                }
+                                if (builtL) break;
+                            }
+                            randomNumber = 1 - randomNumber;
+                        }
+                    }
+
+                    if (builtL) continue;
+                    if (builtN) continue;
+                }
+
+                if (builtL) continue;
+                if (builtN) continue;
+                if (startPos1.y < startPos2.y)
+                {
+                    bool case_orientation = true;
+                    if (startPos1.x > startPos2.x)
+                    {
+                        case_orientation = false;
+                    }
+
+                    if ((case_orientation && startPos1.x <= startPos2.x && startPos2.x < startPos1.x + sizeInTiles1.x - 5) || (!case_orientation && startPos1.x > startPos2.x && startPos1.x < startPos2.x + sizeInTiles2.x - 5))
+                    {
+                        Vector3Int startPosOffset = case_orientation ? startPos2 : startPos1;
+                        int startPosOffsetExtra = case_orientation ? 0 : startPos2.y - startPos1.y;
+
+                        bool intersectionN = false;
+                        for (int i = -1; i <= startPos2.y - startPos1.y - sizeInTiles1.y + 1; ++i)
+                        {
+                            int offset = case_orientation ? i * -1 : i + sizeInTiles1.y;
+
+                            if (tilemapFloor.GetTile(startPosOffset + new Vector3Int(2, offset, 0)) != null)
+                            {
+                                intersectionN = true;
+                                break;
+                            }
+                            if (tilemapFloor.GetTile(startPosOffset + new Vector3Int(3, offset, 0)) != null)
+                            {
+                                intersectionN = true;
+                                break;
+                            }
+
+                            if (i == -1 || i == 0 || i == startPos2.y - startPos1.y - sizeInTiles1.y + 1 || i == startPos2.y - startPos1.y - sizeInTiles1.y) continue;
+                            if (tilemapWalls.GetTile(startPosOffset + new Vector3Int(1, offset, 0)) != null)
+                            {
+                                intersectionN = true;
+                                break;
+                            }
+                            if (tilemapFloorWalls.GetTile(startPosOffset + new Vector3Int(1, offset, 0)) != null)
+                            {
+                                intersectionN = true;
+                                break;
+                            }
+                            if (tilemapWalls.GetTile(startPosOffset + new Vector3Int(4, offset, 0)) != null)
+                            {
+                                intersectionN = true;
+                                break;
+                            }
+                            if (tilemapFloorWalls.GetTile(startPosOffset + new Vector3Int(4, offset, 0)) != null)
+                            {
+                                intersectionN = true;
+                                break;
+                            }
+                        }
+
+                        if (!intersectionN)
+                        {
+                            for (int i = -1; i <= startPos2.y - startPos1.y - sizeInTiles1.y + 1; ++i)
+                            {
+                                int offset = case_orientation ? i * -1 : i + sizeInTiles1.y;
+
+                                Vector3Int tilePos = startPosOffset + new Vector3Int(2, offset, 0);
+                                TileBase tileToPaint = getRandomTileFloor();
+                                tilemapFloor.SetTile(tilePos, tileToPaint);
+
+                                tilePos = startPosOffset + new Vector3Int(3, offset, 0);
+                                tileToPaint = getRandomTileFloor();
+                                tilemapFloor.SetTile(tilePos, tileToPaint);
+
+                                tilePos = startPosOffset + new Vector3Int(1, offset, 0);
+                                tileToPaint = tileWallLeft;
+                                tilemapWalls.SetTile(tilePos, tileToPaint);
+
+                                tilePos = startPosOffset + new Vector3Int(4, offset, 0);
+                                tileToPaint = tileWallRight;
+                                tilemapWalls.SetTile(tilePos, tileToPaint);
+                            }
+
+                            Vector3Int tilePos2 = startPosOffset + new Vector3Int(1, 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                            TileBase tileToPaint2 = tileCornerLowerRight;
+                            tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                            tilePos2 = startPosOffset + new Vector3Int(4, 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                            tileToPaint2 = tileCornerLowerLeft;
+                            tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                            tilePos2 = startPosOffset + new Vector3Int(1, 2, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                            tileToPaint2 = tileCorner02LowerRight;
+                            tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                            tilePos2 = startPosOffset + new Vector3Int(4, 2, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                            tileToPaint2 = tileCorner02LowerLeft;
+                            tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                            tilePos2 = startPosOffset + new Vector3Int(2, 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                            tilemapWalls.SetTile(tilePos2, null);
+                            tilePos2 = startPosOffset + new Vector3Int(2, 2, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                            tilemapWalls.SetTile(tilePos2, null);
+                            tilePos2 = startPosOffset + new Vector3Int(3, 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                            tilemapWalls.SetTile(tilePos2, null);
+                            tilePos2 = startPosOffset + new Vector3Int(3, 2, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                            tilemapWalls.SetTile(tilePos2, null);
+
+                            tilePos2 = startPosOffset + new Vector3Int(1, startPos1.y - startPos2.y + sizeInTiles1.y, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                            tileToPaint2 = tileCornerUpperLeft;
+                            tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                            tilePos2 = startPosOffset + new Vector3Int(4, startPos1.y - startPos2.y + sizeInTiles1.y, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                            tileToPaint2 = tileCornerUpperRight;
+                            tilemapWalls.SetTile(tilePos2, tileToPaint2);
+
+                            tilePos2 = startPosOffset + new Vector3Int(2, startPos1.y - startPos2.y + sizeInTiles1.y, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                            tilemapWalls.SetTile(tilePos2, null);
+                            tilePos2 = startPosOffset + new Vector3Int(2, startPos1.y - startPos2.y + sizeInTiles1.y - 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                            tilemapFloorWalls.SetTile(tilePos2, null);
+                            tilePos2 = startPosOffset + new Vector3Int(3, startPos1.y - startPos2.y + sizeInTiles1.y, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                            tilemapWalls.SetTile(tilePos2, null);
+                            tilePos2 = startPosOffset + new Vector3Int(3, startPos1.y - startPos2.y + sizeInTiles1.y - 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                            tilemapFloorWalls.SetTile(tilePos2, null);
+
+                            tilePos2 = startPosOffset + new Vector3Int(1, startPos1.y - startPos2.y + sizeInTiles1.y - 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                            tilemapWalls.SetTile(tilePos2, null);
+                            tilePos2 = startPosOffset + new Vector3Int(4, startPos1.y - startPos2.y + sizeInTiles1.y - 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                            tilemapWalls.SetTile(tilePos2, null);
+
+                            tilePos2 = startPosOffset + new Vector3Int(1, startPos1.y - startPos2.y + sizeInTiles1.y - 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                            tileToPaint2 = tileBricks03;
+                            tilemapFloorWalls.SetTile(tilePos2, tileToPaint2);
+
+                            tilePos2 = startPosOffset + new Vector3Int(4, startPos1.y - startPos2.y + sizeInTiles1.y - 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
+                            tileToPaint2 = tileBricks02;
+                            tilemapFloorWalls.SetTile(tilePos2, tileToPaint2);
+
+                            nodePairs.Add($"{fromNode},{toNode}");
+                            if (!graphFinal.ContainsKey(fromNode))
+                            {
+                                graphFinal[fromNode] = new HashSet<int>();
+                            }
+                            if (!graphFinal.ContainsKey(toNode))
+                            {
+                                graphFinal[toNode] = new HashSet<int>();
+                            }
+                            graphFinal[fromNode].Add(toNode);
+                            graphFinal[toNode].Add(fromNode);
+                            if (!initialBuild)
+                            {
+                                Debug.Log("Changed graph.");
+                                generateHallways(extraEdgesGraph, nodePairs, false, 1);
+                                return;
+                            }
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
+        generateHallways(extraEdgesGraph, nodePairs, false, buildStep + 1);
+        return;
+    }
 
 
     private void Update()
@@ -379,10 +1280,12 @@ public class DungeonGenerationScript : MonoBehaviour
                         ++lineIndex;
                     }
                 }
+                /*
                 for (int i = 0; i < lineIndex; ++i)
                 {
                     Debug.Log(startPoints[i]);
                 }
+                */
 
                 //PAINT TILES
                 int roomsToDraw = numRectanglesToChange;
@@ -453,214 +1356,54 @@ public class DungeonGenerationScript : MonoBehaviour
 
                 //GENERATE HALLWAYS
                 HashSet<string> nodePairs = new HashSet<string>();
-                foreach (var nodePair in extraEdgesGraph)
+
+                generateHallways(extraEdgesGraph, nodePairs, true);
+                generateHallways(extraEdgesGraph, nodePairs, false, 1);
+
+                List<HashSet<int>> connectedComponents = new List<HashSet<int>>();
+                HashSet<int> visitedNodes = new HashSet<int>();
+
+                foreach (var nodePair2 in graphFinal)
                 {
-                    int fromNode = nodePair.Key;
-                    foreach (int toNode in nodePair.Value)
+                    int fromNode2 = nodePair2.Key;
+
+                    if (visitedNodes.Contains(fromNode2))
+                        continue;
+
+                    HashSet<int> currentComponent = new HashSet<int>();
+                    DFS(fromNode2, graphFinal, visitedNodes, currentComponent);
+                    connectedComponents.Add(currentComponent);
+                }
+
+                connectedComponents.Sort((a, b) => b.Count.CompareTo(a.Count));
+                foreach (HashSet<int> component in connectedComponents)
+                {
+                    string componentString = "Connected Component: ";
+                    foreach (int node in component)
                     {
-                        if (nodePairs.Contains($"{toNode},{fromNode}"))
-                        {
-                            continue;
-                        }
-
-                        Rigidbody2D rb1 = sortedRectangles[fromNode].GetComponent<Rigidbody2D>();
-                        Vector3Int startPos1 = tilemapFloor.WorldToCell(rb1.position);
-                        Rigidbody2D rb2 = sortedRectangles[toNode].GetComponent<Rigidbody2D>();
-                        Vector3Int startPos2 = tilemapFloor.WorldToCell(rb2.position);
-
-                        Vector3 tileSize = tilemapFloor.cellSize;
-
-                        Vector3Int sizeInTiles1 = new Vector3Int(
-                            Mathf.RoundToInt(rb1.GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
-                            Mathf.RoundToInt(rb1.GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
-                            1);
-                        Vector3Int sizeInTiles2 = new Vector3Int(
-                            Mathf.RoundToInt(rb2.GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
-                            Mathf.RoundToInt(rb2.GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
-                            1);
-
-                        if (startPos1.x < startPos2.x)
-                        {
-                            bool case_orientation = true;
-                            if (startPos1.y > startPos2.y)
-                            {
-                                case_orientation = false;
-                            }
-
-                            if ((case_orientation && startPos1.y <= startPos2.y && startPos2.y < startPos1.y + sizeInTiles1.y - 6) || (!case_orientation && startPos1.y > startPos2.y && startPos1.y < startPos2.y + sizeInTiles2.y - 6))
-                            {
-                                Vector3Int startPosOffset = case_orientation ? startPos2 : startPos1;
-                                int startPosOffsetExtra = case_orientation ? 0: startPos2.x - startPos1.x;
-
-                                for (int i = 0; i <= startPos2.x - startPos1.x - sizeInTiles1.x + 1; ++i)
-                                {
-                                    int offset = case_orientation ? i * -1 : i + sizeInTiles1.x - 1;
-
-                                    Vector3Int tilePos = startPosOffset + new Vector3Int(offset, 3, 0);
-                                    TileBase tileToPaint = getRandomTileFloor();
-                                    tilemapFloor.SetTile(tilePos, tileToPaint);
-
-                                    tilePos = startPosOffset + new Vector3Int(offset, 4, 0);
-                                    tileToPaint = getRandomTileFloor();
-                                    tilemapFloor.SetTile(tilePos, tileToPaint);
-
-                                    tilePos = startPosOffset + new Vector3Int(offset, 3, 0);
-                                    tileToPaint = tileWallUpper;
-                                    tilemapWalls.SetTile(tilePos, tileToPaint);
-
-                                    tilePos = startPosOffset + new Vector3Int(offset, 6, 0);
-                                    tileToPaint = tileWallUpper;
-                                    tilemapWalls.SetTile(tilePos, tileToPaint);
-
-                                    tilePos = startPosOffset + new Vector3Int(offset, 5, 0);
-                                    tileToPaint = tileBricks01;
-                                    tilemapFloorWalls.SetTile(tilePos, tileToPaint);
-
-                                    tilePos = startPosOffset + new Vector3Int(offset, 2, 0);
-                                    tileToPaint = tileBricks01;
-                                    tilemapWalls.SetTile(tilePos, tileToPaint);
-                                }
-
-                                Vector3Int tilePos2 = startPosOffset + new Vector3Int(0, 6, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
-                                TileBase tileToPaint2 = tileCornerUpperLeft;
-                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
-
-                                tilePos2 = startPosOffset + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 6, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
-                                tileToPaint2 = tileCornerUpperRight;
-                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
-
-                                tilePos2 = startPosOffset + new Vector3Int(0, 5, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
-                                tilemapWalls.SetTile(tilePos2, null);
-                                tilePos2 = startPosOffset + new Vector3Int(0, 4, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
-                                tilemapWalls.SetTile(tilePos2, null);
-
-                                tilePos2 = startPosOffset + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 5, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
-                                tilemapWalls.SetTile(tilePos2, null);
-                                tilePos2 = startPosOffset + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 4, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
-                                tilemapWalls.SetTile(tilePos2, null);
-
-                                tilePos2 = startPosOffset + new Vector3Int(0, 5, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
-                                tileToPaint2 = tileBricks03;
-                                tilemapFloorWalls.SetTile(tilePos2, tileToPaint2);
-
-                                tilePos2 = startPosOffset + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 5, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
-                                tileToPaint2 = tileBricks02;
-                                tilemapFloorWalls.SetTile(tilePos2, tileToPaint2);
-
-                                tilePos2 = startPosOffset + new Vector3Int(0, 2, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
-                                tileToPaint2 = tileCornerLowerRight;
-                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
-
-                                tilePos2 = startPosOffset + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 2, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
-                                tileToPaint2 = tileCornerLowerLeft;
-                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
-
-                                tilePos2 = startPosOffset + new Vector3Int(0, 3, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
-                                tileToPaint2 = tileCorner02LowerRight;
-                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
-
-                                tilePos2 = startPosOffset + new Vector3Int(startPos1.x - startPos2.x + sizeInTiles1.x - 1, 3, 0) + new Vector3Int(startPosOffsetExtra, 0, 0);
-                                tileToPaint2 = tileCorner02LowerLeft;
-                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
-
-                                nodePairs.Add($"{fromNode},{toNode}");
-                                continue;
-                            }
-                        }
-                        if (startPos1.y < startPos2.y)
-                        {
-                            bool case_orientation = true;
-                            if (startPos1.x > startPos2.x)
-                            {
-                                case_orientation = false;
-                            }
-
-                            if ((case_orientation && startPos1.x <= startPos2.x && startPos2.x < startPos1.x + sizeInTiles1.x - 5) || (!case_orientation && startPos1.x > startPos2.x && startPos1.x < startPos2.x + sizeInTiles2.x - 5))
-                            {
-                                Vector3Int startPosOffset = case_orientation ? startPos2 : startPos1;
-                                int startPosOffsetExtra = case_orientation ? 0 : startPos2.y - startPos1.y;
-
-                                for (int i = -1; i <= startPos2.y - startPos1.y - sizeInTiles1.y + 1; ++i)
-                                {
-                                    int offset = case_orientation ? i * -1 : i + sizeInTiles1.y;
-
-                                    Vector3Int tilePos = startPosOffset + new Vector3Int(2, offset, 0);
-                                    TileBase tileToPaint = getRandomTileFloor();
-                                    tilemapFloor.SetTile(tilePos, tileToPaint);
-
-                                    tilePos = startPosOffset + new Vector3Int(3, offset, 0);
-                                    tileToPaint = getRandomTileFloor();
-                                    tilemapFloor.SetTile(tilePos, tileToPaint);
-
-                                    tilePos = startPosOffset + new Vector3Int(1, offset, 0);
-                                    tileToPaint = tileWallLeft;
-                                    tilemapWalls.SetTile(tilePos, tileToPaint);
-
-                                    tilePos = startPosOffset + new Vector3Int(4, offset, 0);
-                                    tileToPaint = tileWallRight;
-                                    tilemapWalls.SetTile(tilePos, tileToPaint);
-                                }
-
-                                Vector3Int tilePos2 = startPosOffset + new Vector3Int(1, 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
-                                TileBase tileToPaint2 = tileCornerLowerRight;
-                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
-
-                                tilePos2 = startPosOffset + new Vector3Int(4, 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
-                                tileToPaint2 = tileCornerLowerLeft;
-                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
-
-                                tilePos2 = startPosOffset + new Vector3Int(1, 2, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
-                                tileToPaint2 = tileCorner02LowerRight;
-                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
-
-                                tilePos2 = startPosOffset + new Vector3Int(4, 2, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
-                                tileToPaint2 = tileCorner02LowerLeft;
-                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
-
-                                tilePos2 = startPosOffset + new Vector3Int(2, 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
-                                tilemapWalls.SetTile(tilePos2, null);
-                                tilePos2 = startPosOffset + new Vector3Int(2, 2, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
-                                tilemapWalls.SetTile(tilePos2, null);
-                                tilePos2 = startPosOffset + new Vector3Int(3, 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
-                                tilemapWalls.SetTile(tilePos2, null);
-                                tilePos2 = startPosOffset + new Vector3Int(3, 2, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
-                                tilemapWalls.SetTile(tilePos2, null);
-
-                                tilePos2 = startPosOffset + new Vector3Int(1, startPos1.y - startPos2.y + sizeInTiles1.y, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
-                                tileToPaint2 = tileCornerUpperLeft;
-                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
-
-                                tilePos2 = startPosOffset + new Vector3Int(4, startPos1.y - startPos2.y + sizeInTiles1.y, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
-                                tileToPaint2 = tileCornerUpperRight;
-                                tilemapWalls.SetTile(tilePos2, tileToPaint2);
-
-                                tilePos2 = startPosOffset + new Vector3Int(2, startPos1.y - startPos2.y + sizeInTiles1.y, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
-                                tilemapWalls.SetTile(tilePos2, null);
-                                tilePos2 = startPosOffset + new Vector3Int(2, startPos1.y - startPos2.y + sizeInTiles1.y - 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
-                                tilemapFloorWalls.SetTile(tilePos2, null);
-                                tilePos2 = startPosOffset + new Vector3Int(3, startPos1.y - startPos2.y + sizeInTiles1.y, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
-                                tilemapWalls.SetTile(tilePos2, null);
-                                tilePos2 = startPosOffset + new Vector3Int(3, startPos1.y - startPos2.y + sizeInTiles1.y - 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
-                                tilemapFloorWalls.SetTile(tilePos2, null);
-
-                                tilePos2 = startPosOffset + new Vector3Int(1, startPos1.y - startPos2.y + sizeInTiles1.y - 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
-                                tilemapWalls.SetTile(tilePos2, null);
-                                tilePos2 = startPosOffset + new Vector3Int(4, startPos1.y - startPos2.y + sizeInTiles1.y - 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
-                                tilemapWalls.SetTile(tilePos2, null);
-
-                                tilePos2 = startPosOffset + new Vector3Int(1, startPos1.y - startPos2.y + sizeInTiles1.y - 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
-                                tileToPaint2 = tileBricks03;
-                                tilemapFloorWalls.SetTile(tilePos2, tileToPaint2);
-                                    
-                                tilePos2 = startPosOffset + new Vector3Int(4, startPos1.y - startPos2.y + sizeInTiles1.y - 1, 0) + new Vector3Int(0, startPosOffsetExtra, 0);
-                                tileToPaint2 = tileBricks02;
-                                tilemapFloorWalls.SetTile(tilePos2, tileToPaint2);
-
-                                nodePairs.Add($"{fromNode},{toNode}");
-                                continue;
-                            }
-                        }
+                        componentString += node.ToString() + " ";
                     }
+                    Debug.Log(componentString);
+                }
+                Debug.Log("Finished");
+
+                //SELECT MAIN ROOMS
+                if (connectedComponents.Count > 0)
+                {
+                    //Starting Room
+                    int randomIndex = UnityEngine.Random.Range(0, connectedComponents[0].Count);
+                    int[] firstIndexElements = new int[connectedComponents[0].Count];
+                    connectedComponents[0].CopyTo(firstIndexElements);
+                    startingRoom = firstIndexElements[randomIndex];
+                    Debug.Log("Starting Room: " + startingRoom);
+                    
+                    Vector3Int sizeInTilesStart = new Vector3Int(
+                    Mathf.RoundToInt(sortedRectangles[startingRoom].GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
+                    Mathf.RoundToInt(sortedRectangles[startingRoom].GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
+                    1);
+                    Vector3 newPosition = new Vector3 (sortedRectangles[startingRoom].transform.position.x + sizeInTilesStart.x / 2, sortedRectangles[startingRoom].transform.position.y + sizeInTilesStart.x / 2, 0);
+                    Player.transform.position = newPosition;
+                    Player.SetActive(true);
                 }
 
                 //DEACTIVATE ROOM RECTANGLES
@@ -669,6 +1412,83 @@ public class DungeonGenerationScript : MonoBehaviour
                     rectangle.SetActive(false);
                 }
 
+                //DEACTIVATE ROOM RECTANGLES
+                foreach (GameObject rectangle in rectangles)
+                {
+                    rectangle.SetActive(false);
+                }
+
+
+                /*
+                //REMOVE SINGLE ROOMS
+                roomsToDraw = numRectanglesToChange;
+                foreach (GameObject rectangle in sortedRectangles)
+                {
+                    if (graphFinal.ContainsKey(sortedRectangles.IndexOf(rectangle))) continue;
+
+                    if (roomsToDraw <= 0) break;
+                    --roomsToDraw;
+
+                    Rigidbody2D rb = rectangle.GetComponent<Rigidbody2D>();
+                    Vector3Int startPos = tilemapFloor.WorldToCell(rb.position);
+
+                    Vector3 tileSize = tilemapFloor.cellSize;
+                    Vector3Int sizeInTiles = new Vector3Int(
+                        Mathf.RoundToInt(rb.GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
+                        Mathf.RoundToInt(rb.GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
+                        1);
+
+                    //Floor
+                    for (int i = 1; i < sizeInTiles.x - 1; ++i)
+                    {
+                        for (int j = 2; j < sizeInTiles.y - 1; ++j)
+                        {
+                            Vector3Int tilePos = startPos + new Vector3Int(i, j, 0);
+                            tilemapFloor.SetTile(tilePos, null);
+                        }
+                    }
+
+                    //FloorWalls
+                    for (int i = 1; i < sizeInTiles.x - 1; ++i)
+                    {
+                        Vector3Int tilePos = startPos + new Vector3Int(i, sizeInTiles.y - 1, 0);
+                        tilemapFloorWalls.SetTile(tilePos, null);
+
+                        tilePos = startPos + new Vector3Int(i, sizeInTiles.y, 0);
+                        tilemapWalls.SetTile(tilePos, null);
+                    }
+                    Vector3Int tilePos2 = startPos + new Vector3Int(0, sizeInTiles.y - 1, 0);
+
+                    //Walls
+                    for (int j = 2; j < sizeInTiles.y; ++j)
+                    {
+                        Vector3Int tilePos = startPos + new Vector3Int(0, j, 0);
+                        tilemapWalls.SetTile(tilePos, null);
+
+                        tilePos = startPos + new Vector3Int(sizeInTiles.x - 1, j, 0);
+                        tilemapWalls.SetTile(tilePos, null);
+                    }
+                    for (int i = 1; i < sizeInTiles.x - 1; ++i)
+                    {
+                        Vector3Int tilePos = startPos + new Vector3Int(i, 1, 0);
+                        tilemapWalls.SetTile(tilePos, null);
+
+                        tilePos = startPos + new Vector3Int(i, 2, 0);
+                        tilemapWalls.SetTile(tilePos, null);
+                    }
+
+                    tilePos2 = startPos + new Vector3Int(0, sizeInTiles.y, 0);
+                    tilemapWalls.SetTile(tilePos2, null);
+                    tilePos2 = startPos + new Vector3Int(sizeInTiles.x - 1, sizeInTiles.y, 0);
+                    tilemapWalls.SetTile(tilePos2, null);
+
+                    tilePos2 = startPos + new Vector3Int(0, 1, 0);
+                    tilemapWalls.SetTile(tilePos2, null);
+                    tilePos2 = startPos + new Vector3Int(sizeInTiles.x - 1, 1, 0);
+                    tilemapWalls.SetTile(tilePos2, null);
+                }*/
+
+                /*
                 //DEBUG LINES
                 for (int i = 0; i < lineIndex; i++)
                 {
@@ -690,7 +1510,7 @@ public class DungeonGenerationScript : MonoBehaviour
 
                     lineRenderers[i] = lineRenderer;
                 }
-
+                */
             }
         }
     }
