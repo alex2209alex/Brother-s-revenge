@@ -1413,6 +1413,8 @@ public class DungeonGenerationScript : MonoBehaviour
                 if (connectedComponents.Count > 0)
                 {
                     //Starting Room
+                    List<int> firstConnectedComponent = new List<int>(connectedComponents[0]);
+
                     int connectedRoomsCount = connectedComponents[0].Count;
                     int randomIndex = UnityEngine.Random.Range(0, connectedRoomsCount);
                     int[] firstIndexElements = new int[connectedRoomsCount];
@@ -1421,10 +1423,10 @@ public class DungeonGenerationScript : MonoBehaviour
                     Debug.Log("Starting Room: " + startingRoom);
                     
                     Vector3Int sizeInTilesStart = new Vector3Int(
-                    Mathf.RoundToInt(sortedRectangles[startingRoom].GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
-                    Mathf.RoundToInt(sortedRectangles[startingRoom].GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
+                    Mathf.RoundToInt(sortedRectangles[firstConnectedComponent[startingRoom]].GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
+                    Mathf.RoundToInt(sortedRectangles[firstConnectedComponent[startingRoom]].GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
                     1);
-                    Vector3 newPosition = new Vector3 (sortedRectangles[startingRoom].transform.position.x + sizeInTilesStart.x / 2, sortedRectangles[startingRoom].transform.position.y + sizeInTilesStart.y / 2, 0);
+                    Vector3 newPosition = new Vector3 (sortedRectangles[firstConnectedComponent[startingRoom]].transform.position.x + sizeInTilesStart.x / 2, sortedRectangles[firstConnectedComponent[startingRoom]].transform.position.y + sizeInTilesStart.y / 2, 0);
                     Player.transform.position = newPosition;
                     playerGO.SetActive(true);
 
@@ -1444,6 +1446,7 @@ public class DungeonGenerationScript : MonoBehaviour
                     excludedValues.Add(enemyRoom03);
 
                     //Treasure room
+
                     Vector3Int sizeInTilesTreasure01 = new Vector3Int(
                     Mathf.RoundToInt(sortedRectangles[treasureRoom].GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
                     Mathf.RoundToInt(sortedRectangles[treasureRoom].GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
@@ -1454,17 +1457,18 @@ public class DungeonGenerationScript : MonoBehaviour
                     Instantiate(ChestPrefab, chest02Position, Quaternion.identity);
 
                     //Enemies
+
                     for (int i = 0; i < connectedRoomsCount; ++i)
                     {
                         if (i != treasureRoom && i != startingRoom && i != enemyRoom01 && i != enemyRoom02 && i != enemyRoom03)
                         {
                             Vector3Int sizeInTilesRoom = new Vector3Int(
-                            Mathf.RoundToInt(sortedRectangles[i].GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
-                            Mathf.RoundToInt(sortedRectangles[i].GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
+                            Mathf.RoundToInt(sortedRectangles[firstConnectedComponent[i]].GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
+                            Mathf.RoundToInt(sortedRectangles[firstConnectedComponent[i]].GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
                             1);
 
-                            Vector3 enemy01Position = new Vector3(Mathf.Round(sortedRectangles[i].transform.position.x + sizeInTilesRoom.x / 2) + 1.5f, Mathf.Round(sortedRectangles[i].transform.position.y + sizeInTilesRoom.y / 2) + 0.8f, 0);
-                            Vector3 enemy02Position = new Vector3(Mathf.Round(sortedRectangles[i].transform.position.x + sizeInTilesRoom.x / 2) - 1.5f, Mathf.Round(sortedRectangles[i].transform.position.y + sizeInTilesRoom.y / 2) + 0.8f, 0);
+                            Vector3 enemy01Position = new Vector3(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x / 2) + 1.5f, Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y / 2) + 0.8f, 0);
+                            Vector3 enemy02Position = new Vector3(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x / 2) - 1.5f, Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y / 2) + 0.8f, 0);
 
                             int randomEnemy01 = UnityEngine.Random.Range(0, 6);
                             int randomEnemy02 = UnityEngine.Random.Range(0, 6);
