@@ -14,9 +14,7 @@ public class Player : MonoBehaviour
     [SerializeField] private double maxHP;
     [SerializeField] private double currentHP = 10;
     [SerializeField] private double meleeAttackRange;
-    private double rangedAttackRange;
     [SerializeField] private double meleeDamage;
-    private double rangedDamage;
     [SerializeField] private float attackCooldown;
     private float lastAttackTime;
     private bool isAttackRanged;
@@ -38,9 +36,7 @@ public class Player : MonoBehaviour
         maxHP = 10;
         currentHP = maxHP;
         meleeAttackRange = 2;
-        rangedAttackRange = 0;
         meleeDamage = 1;
-        rangedDamage = 0;
         attackCooldown = 5;
         lastAttackTime = Time.time - attackCooldown;
         isAttackRanged = false;

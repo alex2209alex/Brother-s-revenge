@@ -48,7 +48,7 @@ public class DungeonGenerationScript : MonoBehaviour
     [SerializeField] private GameObject ChestPrefab;
     [SerializeField] private GameObject Enemy01, Enemy02, Enemy03, Enemy04, Enemy05, Enemy06, Enemy07;
     [SerializeField] private GameObject[] Enemies;
-
+    public GameObject camera;
 
     Dictionary<int, HashSet<int>> graphFinal = new Dictionary<int, HashSet<int>>();
 
@@ -1430,6 +1430,8 @@ public class DungeonGenerationScript : MonoBehaviour
                     Player.transform.position = newPosition;
                     playerGO.SetActive(true);
 
+                    camera.GetComponent<FollowScript>().spawnedPlayer = true;
+
                     List<int> excludedValues = new List<int>() {};
                     excludedValues.Add(startingRoom);
 
@@ -1448,11 +1450,14 @@ public class DungeonGenerationScript : MonoBehaviour
                     //Treasure room
 
                     Vector3Int sizeInTilesTreasure01 = new Vector3Int(
-                    Mathf.RoundToInt(sortedRectangles[treasureRoom].GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
-                    Mathf.RoundToInt(sortedRectangles[treasureRoom].GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
+                    Mathf.RoundToInt(sortedRectangles[firstConnectedComponent[treasureRoom]].GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
+                    Mathf.RoundToInt(sortedRectangles[firstConnectedComponent[treasureRoom]].GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
                     1);
-                    Vector3 chest01Position = new Vector3(Mathf.Round(sortedRectangles[treasureRoom].transform.position.x + sizeInTilesTreasure01.x / 2) + 1.5f, Mathf.Round(sortedRectangles[treasureRoom].transform.position.y + sizeInTilesTreasure01.y / 2) + 0.8f, 0);
-                    Vector3 chest02Position = new Vector3(Mathf.Round(sortedRectangles[treasureRoom].transform.position.x + sizeInTilesTreasure01.x / 2) - 1.5f, Mathf.Round(sortedRectangles[treasureRoom].transform.position.y + sizeInTilesTreasure01.y / 2) + 0.8f, 0);
+
+                    Vector3 chest01Position = new Vector3(Mathf.Round(sortedRectangles[firstConnectedComponent[treasureRoom]].transform.position.x + sizeInTilesTreasure01.x / 2) + 1.5f, Mathf.Round(sortedRectangles[firstConnectedComponent[treasureRoom]].transform.position.y + sizeInTilesTreasure01.y / 2) + 0.8f, 0);
+                    Vector3 chest02Position = new Vector3(Mathf.Round(sortedRectangles[firstConnectedComponent[treasureRoom]].transform.position.x + sizeInTilesTreasure01.x / 2) - 1.5f, Mathf.Round(sortedRectangles[firstConnectedComponent[treasureRoom]].transform.position.y + sizeInTilesTreasure01.y / 2) + 0.8f, 0);
+
+
                     Instantiate(ChestPrefab, chest01Position, Quaternion.identity);
                     Instantiate(ChestPrefab, chest02Position, Quaternion.identity);
 
@@ -1470,8 +1475,8 @@ public class DungeonGenerationScript : MonoBehaviour
                             Vector3 enemy01Position = new Vector3(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x / 2) + 1.5f, Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y / 2) + 0.8f, 0);
                             Vector3 enemy02Position = new Vector3(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x / 2) - 1.5f, Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y / 2) + 0.8f, 0);
 
-                            int randomEnemy01 = UnityEngine.Random.Range(0, 6);
-                            int randomEnemy02 = UnityEngine.Random.Range(0, 6);
+                            int randomEnemy01 = UnityEngine.Random.Range(0, 7);
+                            int randomEnemy02 = UnityEngine.Random.Range(0, 7);
 
                             GameObject e01 = Instantiate(Enemies[randomEnemy01], enemy01Position, Quaternion.identity);
                             GameObject e02 = Instantiate(Enemies[randomEnemy02], enemy02Position, Quaternion.identity);
@@ -1480,6 +1485,101 @@ public class DungeonGenerationScript : MonoBehaviour
                             e01.GetComponent<Enemy>().setPlayerGO(playerGO);
                             e02.GetComponent<Enemy>().setPlayer(Player);
                             e02.GetComponent<Enemy>().setPlayerGO(playerGO);
+
+                        } else if (i != treasureRoom)
+                        {
+                            if (i == enemyRoom01)
+                            {
+                                Vector3Int sizeInTilesRoom = new Vector3Int(
+                                Mathf.RoundToInt(sortedRectangles[firstConnectedComponent[i]].GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
+                                Mathf.RoundToInt(sortedRectangles[firstConnectedComponent[i]].GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
+                                1);
+
+                                Vector3 enemy01Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
+                                Vector3 enemy02Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
+                                Vector3 enemy03Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
+                                Vector3 enemy04Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
+
+                                int randomEnemy01 = 0;
+                                int randomEnemy02 = 0;
+                                int randomEnemy03 = 1;
+                                int randomEnemy04 = 1;
+
+                                GameObject e01 = Instantiate(Enemies[randomEnemy01], enemy01Position, Quaternion.identity);
+                                GameObject e02 = Instantiate(Enemies[randomEnemy02], enemy02Position, Quaternion.identity);
+                                GameObject e03 = Instantiate(Enemies[randomEnemy03], enemy03Position, Quaternion.identity);
+                                GameObject e04 = Instantiate(Enemies[randomEnemy04], enemy04Position, Quaternion.identity);
+
+                                e01.GetComponent<Enemy>().setPlayer(Player);
+                                e01.GetComponent<Enemy>().setPlayerGO(playerGO);
+                                e02.GetComponent<Enemy>().setPlayer(Player);
+                                e02.GetComponent<Enemy>().setPlayerGO(playerGO);
+                                e03.GetComponent<Enemy>().setPlayer(Player);
+                                e03.GetComponent<Enemy>().setPlayerGO(playerGO);
+                                e04.GetComponent<Enemy>().setPlayer(Player);
+                                e04.GetComponent<Enemy>().setPlayerGO(playerGO);
+                            } else if (i == enemyRoom02)
+                            {
+                                Vector3Int sizeInTilesRoom = new Vector3Int(
+                                Mathf.RoundToInt(sortedRectangles[firstConnectedComponent[i]].GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
+                                Mathf.RoundToInt(sortedRectangles[firstConnectedComponent[i]].GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
+                                1);
+
+                                Vector3 enemy01Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
+                                Vector3 enemy02Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
+                                Vector3 enemy03Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
+                                Vector3 enemy04Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
+
+                                int randomEnemy01 = 5;
+                                int randomEnemy02 = 5;
+                                int randomEnemy03 = 5;
+                                int randomEnemy04 = 5;
+
+                                GameObject e01 = Instantiate(Enemies[randomEnemy01], enemy01Position, Quaternion.identity);
+                                GameObject e02 = Instantiate(Enemies[randomEnemy02], enemy02Position, Quaternion.identity);
+                                GameObject e03 = Instantiate(Enemies[randomEnemy03], enemy03Position, Quaternion.identity);
+                                GameObject e04 = Instantiate(Enemies[randomEnemy04], enemy04Position, Quaternion.identity);
+
+                                e01.GetComponent<Enemy>().setPlayer(Player);
+                                e01.GetComponent<Enemy>().setPlayerGO(playerGO);
+                                e02.GetComponent<Enemy>().setPlayer(Player);
+                                e02.GetComponent<Enemy>().setPlayerGO(playerGO);
+                                e03.GetComponent<Enemy>().setPlayer(Player);
+                                e03.GetComponent<Enemy>().setPlayerGO(playerGO);
+                                e04.GetComponent<Enemy>().setPlayer(Player);
+                                e04.GetComponent<Enemy>().setPlayerGO(playerGO);
+                            }
+                            if (i == enemyRoom03)
+                            {
+                                Vector3Int sizeInTilesRoom = new Vector3Int(
+                                Mathf.RoundToInt(sortedRectangles[firstConnectedComponent[i]].GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
+                                Mathf.RoundToInt(sortedRectangles[firstConnectedComponent[i]].GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
+                                1);
+
+                                Vector3 enemy01Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
+                                Vector3 enemy02Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
+                                Vector3 enemy03Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
+                                Vector3 enemy04Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
+
+                                int randomEnemy01 = 4;
+                                int randomEnemy02 = 4;
+                                int randomEnemy03 = 4;
+                                int randomEnemy04 = 4;
+
+                                GameObject e01 = Instantiate(Enemies[randomEnemy01], enemy01Position, Quaternion.identity);
+                                GameObject e02 = Instantiate(Enemies[randomEnemy02], enemy02Position, Quaternion.identity);
+                                GameObject e03 = Instantiate(Enemies[randomEnemy03], enemy03Position, Quaternion.identity);
+                                GameObject e04 = Instantiate(Enemies[randomEnemy04], enemy04Position, Quaternion.identity);
+
+                                e01.GetComponent<Enemy>().setPlayer(Player);
+                                e01.GetComponent<Enemy>().setPlayerGO(playerGO);
+                                e02.GetComponent<Enemy>().setPlayer(Player);
+                                e02.GetComponent<Enemy>().setPlayerGO(playerGO);
+                                e03.GetComponent<Enemy>().setPlayer(Player);
+                                e03.GetComponent<Enemy>().setPlayerGO(playerGO);
+                                e04.GetComponent<Enemy>().setPlayer(Player);
+                                e04.GetComponent<Enemy>().setPlayerGO(playerGO);
+                            }
                         }
                     }
                 }

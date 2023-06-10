@@ -5706,6 +5706,7 @@ MonoBehaviour:
   Enemy06: {fileID: 4109775747951165976, guid: 2a977fa788d7a5948a0e6dbbfedd321b, type: 3}
   Enemy07: {fileID: 507214263392581175, guid: 225da22ae1ad0c94ea31a830b8e0eb68, type: 3}
   Enemies: []
+  camera: {fileID: 519420028}
 --- !u!4 &352315195
 Transform:
   m_ObjectHideFlags: 0
@@ -6218,7 +6219,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 4.5
+  orthographic size: 60
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -6263,6 +6264,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   objectToFollow: {fileID: 123554360}
   speed: 2
+  newSize: 5
+  lerpDuration: 1
+  spawnedPlayer: 0
 --- !u!1 &561306937
 GameObject:
   m_ObjectHideFlags: 0
