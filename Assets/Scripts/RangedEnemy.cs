@@ -38,7 +38,6 @@ public class RangedEnemy : Enemy
             direction.Normalize();
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             transform.position = Vector2.MoveTowards(this.transform.position, playerGO.transform.position, movementSpeed * Time.deltaTime);
-            transform.rotation = Quaternion.Euler(Vector3.forward * 0);
         }
         else if(distance <= dangerRange)
         {
@@ -47,8 +46,8 @@ public class RangedEnemy : Enemy
             direction.Normalize();
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             transform.position = Vector2.MoveTowards(this.transform.position, runTowards, movementSpeed * Time.deltaTime);
-            transform.rotation = Quaternion.Euler(Vector3.forward * 0);
-        }    
+        }
+        transform.rotation = Quaternion.Euler(Vector3.forward * 0);
     }
     protected override void Attack()
     {

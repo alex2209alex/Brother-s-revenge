@@ -24,7 +24,9 @@ public class DungeonGenerationScript : MonoBehaviour
     private bool dungeonBuilt = false;
     List<GameObject> sortedRectangles;
 
-    public GameObject Player;
+    public Player Player;
+    public GameObject playerGO;
+
     public int numLines;
     public Vector2[] startPoints;
     public Vector2[] endPoints;
@@ -41,6 +43,12 @@ public class DungeonGenerationScript : MonoBehaviour
     public Tile tileFloor02, tileFloor03;
     public Tile tileCornerUpperLeft, tileCornerUpperRight, tileCornerLowerLeft, tileCornerLowerRight, tileCorner02LowerLeft, tileCorner02LowerRight;
     public Tile tileBricks02, tileBricks03;
+
+    //Prefabs
+    [SerializeField] private GameObject ChestPrefab;
+    [SerializeField] private GameObject Enemy01, Enemy02, Enemy03, Enemy04, Enemy05, Enemy06, Enemy07;
+    [SerializeField] private GameObject[] Enemies;
+
 
     Dictionary<int, HashSet<int>> graphFinal = new Dictionary<int, HashSet<int>>();
 
@@ -108,6 +116,18 @@ public class DungeonGenerationScript : MonoBehaviour
             parent[root2] = root1;
             rank[root1]++;
         }
+    }
+
+    int GetRandomIntExcluding(int min, int max, List<int> exclusions)
+    {
+        int randomInt = UnityEngine.Random.Range(min, max);
+
+        while (exclusions.Contains(randomInt))
+        {
+            randomInt = UnityEngine.Random.Range(min, max);
+        }
+
+        return randomInt;
     }
 
     int roomDistance(int fromNode, int toNode)
@@ -184,6 +204,8 @@ public class DungeonGenerationScript : MonoBehaviour
     }
     void Start()
     {
+        Enemies = new GameObject[] { Enemy01, Enemy02, Enemy03, Enemy04, Enemy05, Enemy06, Enemy07 };
+
         cellSize = Map.cellSize[0] * 100;
         rectangles = new GameObject[numRooms];
 
@@ -1391,8 +1413,9 @@ public class DungeonGenerationScript : MonoBehaviour
                 if (connectedComponents.Count > 0)
                 {
                     //Starting Room
-                    int randomIndex = UnityEngine.Random.Range(0, connectedComponents[0].Count);
-                    int[] firstIndexElements = new int[connectedComponents[0].Count];
+                    int connectedRoomsCount = connectedComponents[0].Count;
+                    int randomIndex = UnityEngine.Random.Range(0, connectedRoomsCount);
+                    int[] firstIndexElements = new int[connectedRoomsCount];
                     connectedComponents[0].CopyTo(firstIndexElements);
                     startingRoom = firstIndexElements[randomIndex];
                     Debug.Log("Starting Room: " + startingRoom);
@@ -1401,9 +1424,60 @@ public class DungeonGenerationScript : MonoBehaviour
                     Mathf.RoundToInt(sortedRectangles[startingRoom].GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
                     Mathf.RoundToInt(sortedRectangles[startingRoom].GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
                     1);
-                    Vector3 newPosition = new Vector3 (sortedRectangles[startingRoom].transform.position.x + sizeInTilesStart.x / 2, sortedRectangles[startingRoom].transform.position.y + sizeInTilesStart.x / 2, 0);
+                    Vector3 newPosition = new Vector3 (sortedRectangles[startingRoom].transform.position.x + sizeInTilesStart.x / 2, sortedRectangles[startingRoom].transform.position.y + sizeInTilesStart.y / 2, 0);
                     Player.transform.position = newPosition;
-                    Player.SetActive(true);
+                    playerGO.SetActive(true);
+
+                    List<int> excludedValues = new List<int>() {};
+                    excludedValues.Add(startingRoom);
+
+                    int treasureRoom = GetRandomIntExcluding(0, connectedComponents[0].Count, excludedValues);
+                    excludedValues.Add(treasureRoom);
+
+                    int enemyRoom01 = GetRandomIntExcluding(0, connectedComponents[0].Count, excludedValues);
+                    excludedValues.Add(enemyRoom01);
+
+                    int enemyRoom02 = GetRandomIntExcluding(0, connectedComponents[0].Count, excludedValues);
+                    excludedValues.Add(enemyRoom02);
+
+                    int enemyRoom03 = GetRandomIntExcluding(0, connectedComponents[0].Count, excludedValues);
+                    excludedValues.Add(enemyRoom03);
+
+                    //Treasure room
+                    Vector3Int sizeInTilesTreasure01 = new Vector3Int(
+                    Mathf.RoundToInt(sortedRectangles[treasureRoom].GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
+                    Mathf.RoundToInt(sortedRectangles[treasureRoom].GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
+                    1);
+                    Vector3 chest01Position = new Vector3(Mathf.Round(sortedRectangles[treasureRoom].transform.position.x + sizeInTilesTreasure01.x / 2) + 1.5f, Mathf.Round(sortedRectangles[treasureRoom].transform.position.y + sizeInTilesTreasure01.y / 2) + 0.8f, 0);
+                    Vector3 chest02Position = new Vector3(Mathf.Round(sortedRectangles[treasureRoom].transform.position.x + sizeInTilesTreasure01.x / 2) - 1.5f, Mathf.Round(sortedRectangles[treasureRoom].transform.position.y + sizeInTilesTreasure01.y / 2) + 0.8f, 0);
+                    Instantiate(ChestPrefab, chest01Position, Quaternion.identity);
+                    Instantiate(ChestPrefab, chest02Position, Quaternion.identity);
+
+                    //Enemies
+                    for (int i = 0; i < connectedRoomsCount; ++i)
+                    {
+                        if (i != treasureRoom && i != startingRoom && i != enemyRoom01 && i != enemyRoom02 && i != enemyRoom03)
+                        {
+                            Vector3Int sizeInTilesRoom = new Vector3Int(
+                            Mathf.RoundToInt(sortedRectangles[i].GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
+                            Mathf.RoundToInt(sortedRectangles[i].GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
+                            1);
+
+                            Vector3 enemy01Position = new Vector3(Mathf.Round(sortedRectangles[i].transform.position.x + sizeInTilesRoom.x / 2) + 1.5f, Mathf.Round(sortedRectangles[i].transform.position.y + sizeInTilesRoom.y / 2) + 0.8f, 0);
+                            Vector3 enemy02Position = new Vector3(Mathf.Round(sortedRectangles[i].transform.position.x + sizeInTilesRoom.x / 2) - 1.5f, Mathf.Round(sortedRectangles[i].transform.position.y + sizeInTilesRoom.y / 2) + 0.8f, 0);
+
+                            int randomEnemy01 = UnityEngine.Random.Range(0, 6);
+                            int randomEnemy02 = UnityEngine.Random.Range(0, 6);
+
+                            GameObject e01 = Instantiate(Enemies[randomEnemy01], enemy01Position, Quaternion.identity);
+                            GameObject e02 = Instantiate(Enemies[randomEnemy02], enemy02Position, Quaternion.identity);
+
+                            e01.GetComponent<Enemy>().setPlayer(Player);
+                            e01.GetComponent<Enemy>().setPlayerGO(playerGO);
+                            e02.GetComponent<Enemy>().setPlayer(Player);
+                            e02.GetComponent<Enemy>().setPlayerGO(playerGO);
+                        }
+                    }
                 }
 
                 //DEACTIVATE ROOM RECTANGLES

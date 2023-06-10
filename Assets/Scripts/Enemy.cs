@@ -15,6 +15,16 @@ public abstract class Enemy : MonoBehaviour
     protected float attackCooldown;
     protected float lastAttackTime;
 
+    public void setPlayer(Player player)
+    {
+        this.player = player;
+    }
+
+    public void setPlayerGO(GameObject playerGO)
+    {
+        this.playerGO = playerGO;
+    }
+
     public void TakeDamage(double amount) 
     {
         currentHP -= amount;
