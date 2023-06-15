@@ -31,6 +31,7 @@ namespace DefaultNamespace
 
         public void RemoveItem() => OnRemove?.Invoke(this);
 
+        // Functia este legata de butonul "Use" si se apeleaza cand acesta este apasat.
         public void UseItem()
         {
             if (!isActive && ItemType == "Passive")

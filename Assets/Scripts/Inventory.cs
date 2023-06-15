@@ -20,10 +20,16 @@ public class Inventory : MonoBehaviour
     public Toggle enableRemove;
     public Player Player => player;
     
+    // La pornirea scriptului se adauga functia Add pe Event-ul OnItemCollected care se apeleaza la 
+    // colectarea unui item de pe jos
+    // De asemenea acesta trebuie sa fie dezabonat de la Event la inchiderea scriptului
+    
     private void OnEnable() => Collectible.OnItemCollected += Add;
     private void OnDisable() => Collectible.OnItemCollected -= Add;
     
     private InventoryItem foundItem;
+    
+    // Adaugam item in inventar, daca nu a mai fost adaugat inainte, se creaza un nou slot pentru el
     public void Add(ItemData itemData)
     {
         Debug.Log("Adaugam un item in inventar");
@@ -67,6 +73,8 @@ public class Inventory : MonoBehaviour
             }
         }
     }
+    
+    // Cand apasam pe butonul de remove, se apeleaza aceasta functie care permite stergerea itemelor din inventar
 
     public void EnableItemsRemove()
     {
@@ -85,6 +93,8 @@ public class Inventory : MonoBehaviour
             }
         }
     }
+    
+    // Stergem itemul din inventar
     
     public void RemoveStack(ItemSlot itemSlot)
     {

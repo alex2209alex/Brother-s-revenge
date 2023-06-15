@@ -53,6 +53,7 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // Aici am introdus regenerarea hp-ului, care se face la fiecare 4 secunde cu 1 punct
         timeLeftTillRegen -= Time.deltaTime;
         if (timeLeftTillRegen < 0)
         {
@@ -158,6 +159,8 @@ public class Player : MonoBehaviour
 
     }
     
+    // De Event-ul HpUpdate este legata bara de viata din UI care trebuie actualizata odata cu actualizarea vietii
+    
     public double CurrentHP
     {
         get => currentHP;
@@ -176,6 +179,8 @@ public class Player : MonoBehaviour
         get => armor;
         set => armor = value;
     }
+    
+    // Functie apelata cand intram in contact cu un obiect care are un collider, facuta pentru colectarea itemelor
     
     private void OnTriggerEnter2D(Collider2D collision)
     {
