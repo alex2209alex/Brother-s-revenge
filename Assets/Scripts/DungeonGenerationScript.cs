@@ -95,6 +95,7 @@ public class DungeonGenerationScript : MonoBehaviour
 
     public void Union(int[] parent, int[] rank, int node1, int node2)
     {
+        //Union operation
         int root1 = Find(parent, node1);
         int root2 = Find(parent, node2);
 
@@ -120,6 +121,7 @@ public class DungeonGenerationScript : MonoBehaviour
 
     int GetRandomIntExcluding(int min, int max, List<int> exclusions)
     {
+        //Select a random index for special rooms excluding already selected ones
         int randomInt = UnityEngine.Random.Range(min, max);
         int k = 0;
 
@@ -146,6 +148,7 @@ public class DungeonGenerationScript : MonoBehaviour
 
     public Dictionary<int, HashSet<int>> GetMinimalSpanningTree(Dictionary<int, HashSet<int>> graph)
     {
+        //Create minimal spanning tree
         Dictionary<int, HashSet<int>> minimalSpanningTree = new Dictionary<int, HashSet<int>>();
 
         List<(int, int)> edges = GetAllEdges(graph);
@@ -188,6 +191,7 @@ public class DungeonGenerationScript : MonoBehaviour
 
     TileBase getRandomTileFloor()
     {
+        //Get a random tile based on a chance
         TileBase tileToPaint;
         float randomValue = Random.value;
 
@@ -218,6 +222,7 @@ public class DungeonGenerationScript : MonoBehaviour
 
         for (int i = 0; i < numRooms; i++)
         {
+            //Create a list of rectangles for rooms
             int width = Mathf.RoundToInt(Mathf.Clamp(UnityEngine.Random.Range(meanWidth - stdDevWidth, meanWidth + stdDevWidth + 1), minWidth, maxWidth));
             int height = Mathf.RoundToInt(Mathf.Clamp(UnityEngine.Random.Range(meanHeight - stdDevHeight, meanHeight + stdDevHeight + 1), minHeight, maxHeight));
 
@@ -228,6 +233,7 @@ public class DungeonGenerationScript : MonoBehaviour
             rectangle.transform.position = new Vector2(UnityEngine.Random.Range(-6, 6), UnityEngine.Random.Range(-6, 6));
             rectangles[i] = rectangle;
 
+            //Add box colliders and rigid bodies to use the physics engine
             BoxCollider2D boxCollider = rectangles[i].AddComponent<BoxCollider2D>();
             boxCollider.size = new Vector2(width, height);
 
@@ -247,6 +253,7 @@ public class DungeonGenerationScript : MonoBehaviour
 
     public Dictionary<int, HashSet<int>> AddExtraEdges(Dictionary<int, HashSet<int>> graph, Dictionary<int, HashSet<int>> minimalSpanningTree, float extraEdgesPercentage)
     {
+        //Add some edges removed when creating the minimal spanning tree
         Dictionary<int, HashSet<int>> thirdGraph = new Dictionary<int, HashSet<int>>();
 
         foreach (KeyValuePair<int, HashSet<int>> kvp in minimalSpanningTree)
@@ -312,6 +319,7 @@ public class DungeonGenerationScript : MonoBehaviour
     }
     void generateHallways(Dictionary<int, HashSet<int>> extraEdgesGraph, HashSet<string> nodePairs, bool initialBuild, int buildStep = 0)
     {
+        //Build the hallways either first time or try to connect new rooms
         List<HashSet<int>> connectedComponents = new List<HashSet<int>>();
         if (!initialBuild)
         {
@@ -1208,7 +1216,7 @@ public class DungeonGenerationScript : MonoBehaviour
                     break;
                 }
             }
-
+            //Check when room separating using physics engine is finished
             if (allSleeping)
             {
                 Debug.Log("All rigidbodies have gone to sleep");
@@ -1249,7 +1257,7 @@ public class DungeonGenerationScript : MonoBehaviour
 
                     points.Insert(i, new Point(sortedRectangles[i].transform.position.x, sortedRectangles[i].transform.position.y));
                 }
-
+                //Delaunay triangulation for the rooms
                 delaunator = new Delaunator(points.ToArray());
                 int[] triangles = delaunator.Triangles;
 
@@ -1286,8 +1294,9 @@ public class DungeonGenerationScript : MonoBehaviour
                     graph[v3].Add(v1);
                     graph[v3].Add(v2);
                 }
-
+                //Create minimal spanning tree
                 Dictionary<int, HashSet<int>> minimalSpanningTree = GetMinimalSpanningTree(graph);
+                //Add extra edges to the tree to make the dungeon more more circular
                 Dictionary<int, HashSet<int>> extraEdgesGraph = AddExtraEdges(graph, minimalSpanningTree, extraEdgesPercentage);
 
 
@@ -1305,12 +1314,6 @@ public class DungeonGenerationScript : MonoBehaviour
                         ++lineIndex;
                     }
                 }
-                /*
-                for (int i = 0; i < lineIndex; ++i)
-                {
-                    Debug.Log(startPoints[i]);
-                }
-                */
 
                 //PAINT TILES
                 int roomsToDraw = numRectanglesToChange;
@@ -1453,7 +1456,7 @@ public class DungeonGenerationScript : MonoBehaviour
                     Debug.Log("Enemy Room 2: " + enemyRoom02);
                     Debug.Log("Enemy Room 3: " + enemyRoom03);
 
-                    //Treasure room
+                    //Populating with treasure
 
                     Vector3Int sizeInTilesTreasure01 = new Vector3Int(
                     Mathf.RoundToInt(sortedRectangles[firstConnectedComponent[treasureRoom]].GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
@@ -1468,8 +1471,8 @@ public class DungeonGenerationScript : MonoBehaviour
                     Instantiate(ChestPrefab, chest02Position, Quaternion.identity);
 
                     Debug.Log("Treasure Room done: " + treasureRoom);
-                    //Enemies
 
+                    //Populating with enemies
                     for (int i = 0; i < connectedRoomsCount; ++i)
                     {
                         Debug.Log("i = " + i);
@@ -1496,6 +1499,7 @@ public class DungeonGenerationScript : MonoBehaviour
 
                         } else if (i != treasureRoom)
                         {
+                            //Check for each room if it's a special enemy or treasure room
                             if (i == enemyRoom01)
                             {
                                 Vector3Int sizeInTilesRoom = new Vector3Int(
@@ -1596,106 +1600,6 @@ public class DungeonGenerationScript : MonoBehaviour
                 {
                     rectangle.SetActive(false);
                 }
-
-                //DEACTIVATE ROOM RECTANGLES
-                foreach (GameObject rectangle in rectangles)
-                {
-                    rectangle.SetActive(false);
-                }
-
-
-                /*
-                //REMOVE SINGLE ROOMS
-                roomsToDraw = numRectanglesToChange;
-                foreach (GameObject rectangle in sortedRectangles)
-                {
-                    if (graphFinal.ContainsKey(sortedRectangles.IndexOf(rectangle))) continue;
-
-                    if (roomsToDraw <= 0) break;
-                    --roomsToDraw;
-
-                    Rigidbody2D rb = rectangle.GetComponent<Rigidbody2D>();
-                    Vector3Int startPos = tilemapFloor.WorldToCell(rb.position);
-
-                    Vector3 tileSize = tilemapFloor.cellSize;
-                    Vector3Int sizeInTiles = new Vector3Int(
-                        Mathf.RoundToInt(rb.GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
-                        Mathf.RoundToInt(rb.GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
-                        1);
-
-                    //Floor
-                    for (int i = 1; i < sizeInTiles.x - 1; ++i)
-                    {
-                        for (int j = 2; j < sizeInTiles.y - 1; ++j)
-                        {
-                            Vector3Int tilePos = startPos + new Vector3Int(i, j, 0);
-                            tilemapFloor.SetTile(tilePos, null);
-                        }
-                    }
-
-                    //FloorWalls
-                    for (int i = 1; i < sizeInTiles.x - 1; ++i)
-                    {
-                        Vector3Int tilePos = startPos + new Vector3Int(i, sizeInTiles.y - 1, 0);
-                        tilemapFloorWalls.SetTile(tilePos, null);
-
-                        tilePos = startPos + new Vector3Int(i, sizeInTiles.y, 0);
-                        tilemapWalls.SetTile(tilePos, null);
-                    }
-                    Vector3Int tilePos2 = startPos + new Vector3Int(0, sizeInTiles.y - 1, 0);
-
-                    //Walls
-                    for (int j = 2; j < sizeInTiles.y; ++j)
-                    {
-                        Vector3Int tilePos = startPos + new Vector3Int(0, j, 0);
-                        tilemapWalls.SetTile(tilePos, null);
-
-                        tilePos = startPos + new Vector3Int(sizeInTiles.x - 1, j, 0);
-                        tilemapWalls.SetTile(tilePos, null);
-                    }
-                    for (int i = 1; i < sizeInTiles.x - 1; ++i)
-                    {
-                        Vector3Int tilePos = startPos + new Vector3Int(i, 1, 0);
-                        tilemapWalls.SetTile(tilePos, null);
-
-                        tilePos = startPos + new Vector3Int(i, 2, 0);
-                        tilemapWalls.SetTile(tilePos, null);
-                    }
-
-                    tilePos2 = startPos + new Vector3Int(0, sizeInTiles.y, 0);
-                    tilemapWalls.SetTile(tilePos2, null);
-                    tilePos2 = startPos + new Vector3Int(sizeInTiles.x - 1, sizeInTiles.y, 0);
-                    tilemapWalls.SetTile(tilePos2, null);
-
-                    tilePos2 = startPos + new Vector3Int(0, 1, 0);
-                    tilemapWalls.SetTile(tilePos2, null);
-                    tilePos2 = startPos + new Vector3Int(sizeInTiles.x - 1, 1, 0);
-                    tilemapWalls.SetTile(tilePos2, null);
-                }*/
-
-                /*
-                //DEBUG LINES
-                for (int i = 0; i < lineIndex; i++)
-                {
-                    GameObject lineObj = new GameObject("Line" + i);
-                    lineObj.transform.SetParent(transform);
-
-                    LineRenderer lineRenderer = lineObj.AddComponent<LineRenderer>();
-
-                    lineRenderer.positionCount = 2;
-                    lineRenderer.SetPosition(0, startPoints[i]);
-                    lineRenderer.SetPosition(1, endPoints[i]);
-                    lineRenderer.startColor = lineColor;
-                    lineRenderer.endColor = lineColor;
-                    lineRenderer.startWidth = lineWidth;
-                    lineRenderer.endWidth = lineWidth;
-
-                    lineRenderer.sortingLayerName = sortingLayerName;
-                    lineRenderer.sortingOrder = sortingOrder;
-
-                    lineRenderers[i] = lineRenderer;
-                }
-                */
             }
         }
     }
