@@ -36,7 +36,7 @@ public class Player : MonoBehaviour
         maxHP = 10;
         currentHP = maxHP;
         meleeAttackRange = 2;
-        meleeDamage = 1;
+        meleeDamage = 3;
         attackCooldown = 5;
         lastAttackTime = Time.time - attackCooldown;
         isAttackRanged = false;
