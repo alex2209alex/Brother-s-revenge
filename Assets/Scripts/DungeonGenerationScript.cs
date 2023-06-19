@@ -121,10 +121,13 @@ public class DungeonGenerationScript : MonoBehaviour
     int GetRandomIntExcluding(int min, int max, List<int> exclusions)
     {
         int randomInt = UnityEngine.Random.Range(min, max);
+        int k = 0;
 
         while (exclusions.Contains(randomInt))
         {
+            if (k == 1000) return -1;
             randomInt = UnityEngine.Random.Range(min, max);
+            k++;
         }
 
         return randomInt;
@@ -222,7 +225,7 @@ public class DungeonGenerationScript : MonoBehaviour
             SpriteRenderer spriteRenderer = rectangle.AddComponent<SpriteRenderer>();
             spriteRenderer.color = color;
             spriteRenderer.sprite = CreateRectangleSprite(cellSize * width, cellSize * height);
-            rectangle.transform.position = new Vector2(UnityEngine.Random.Range(-15, 15), UnityEngine.Random.Range(-15, 15));
+            rectangle.transform.position = new Vector2(UnityEngine.Random.Range(-6, 6), UnityEngine.Random.Range(-6, 6));
             rectangles[i] = rectangle;
 
             BoxCollider2D boxCollider = rectangles[i].AddComponent<BoxCollider2D>();
@@ -1414,13 +1417,14 @@ public class DungeonGenerationScript : MonoBehaviour
                 {
                     //Starting Room
                     List<int> firstConnectedComponent = new List<int>(connectedComponents[0]);
+                    List<int> excludedValues = new List<int>() { };
 
                     int connectedRoomsCount = connectedComponents[0].Count;
-                    int randomIndex = UnityEngine.Random.Range(0, connectedRoomsCount);
                     int[] firstIndexElements = new int[connectedRoomsCount];
                     connectedComponents[0].CopyTo(firstIndexElements);
-                    startingRoom = firstIndexElements[randomIndex];
-                    Debug.Log("Starting Room: " + startingRoom);
+                    int startingRoom = GetRandomIntExcluding(0, connectedComponents[0].Count, excludedValues);
+                    excludedValues.Add(startingRoom);
+                    Debug.Log("Starting Room done: " + startingRoom);
                     
                     Vector3Int sizeInTilesStart = new Vector3Int(
                     Mathf.RoundToInt(sortedRectangles[firstConnectedComponent[startingRoom]].GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
@@ -1431,9 +1435,6 @@ public class DungeonGenerationScript : MonoBehaviour
                     playerGO.SetActive(true);
 
                     camera.GetComponent<FollowScript>().spawnedPlayer = true;
-
-                    List<int> excludedValues = new List<int>() {};
-                    excludedValues.Add(startingRoom);
 
                     int treasureRoom = GetRandomIntExcluding(0, connectedComponents[0].Count, excludedValues);
                     excludedValues.Add(treasureRoom);
@@ -1446,6 +1447,11 @@ public class DungeonGenerationScript : MonoBehaviour
 
                     int enemyRoom03 = GetRandomIntExcluding(0, connectedComponents[0].Count, excludedValues);
                     excludedValues.Add(enemyRoom03);
+
+                    Debug.Log("Treasure Room: " + treasureRoom);
+                    Debug.Log("Enemy Room 1: " + enemyRoom01);
+                    Debug.Log("Enemy Room 2: " + enemyRoom02);
+                    Debug.Log("Enemy Room 3: " + enemyRoom03);
 
                     //Treasure room
 
@@ -1461,10 +1467,12 @@ public class DungeonGenerationScript : MonoBehaviour
                     Instantiate(ChestPrefab, chest01Position, Quaternion.identity);
                     Instantiate(ChestPrefab, chest02Position, Quaternion.identity);
 
+                    Debug.Log("Treasure Room done: " + treasureRoom);
                     //Enemies
 
                     for (int i = 0; i < connectedRoomsCount; ++i)
                     {
+                        Debug.Log("i = " + i);
                         if (i != treasureRoom && i != startingRoom && i != enemyRoom01 && i != enemyRoom02 && i != enemyRoom03)
                         {
                             Vector3Int sizeInTilesRoom = new Vector3Int(
@@ -1548,8 +1556,7 @@ public class DungeonGenerationScript : MonoBehaviour
                                 e03.GetComponent<Enemy>().setPlayerGO(playerGO);
                                 e04.GetComponent<Enemy>().setPlayer(Player);
                                 e04.GetComponent<Enemy>().setPlayerGO(playerGO);
-                            }
-                            if (i == enemyRoom03)
+                            } else if (i == enemyRoom03)
                             {
                                 Vector3Int sizeInTilesRoom = new Vector3Int(
                                 Mathf.RoundToInt(sortedRectangles[firstConnectedComponent[i]].GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),

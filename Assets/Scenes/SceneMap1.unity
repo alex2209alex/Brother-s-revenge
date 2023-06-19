@@ -5647,9 +5647,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 20e666d6e972ce1489a45b2f4a86952b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numRooms: 60
-  mainRoomsPercentage: 0.75
-  extraEdgesPercentage: 0.35
+  numRooms: 26
+  mainRoomsPercentage: 0.5
+  extraEdgesPercentage: 0.9
   aspectRatioWeight: 1150
   chanceTileFloor01: 0.93
   chanceTileFloor02: 0.98
