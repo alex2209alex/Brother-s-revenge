@@ -1207,8 +1207,17 @@ public class DungeonGenerationScript : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.R))
         {
-            // Restart the scene by pressing R
+            //Restart the scene by pressing R
             SceneManager.LoadScene("SceneMap1");
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            //Zoom in and out
+            camera.GetComponent<FollowScript>().lerpDuration = .4f;
+            if (camera.GetComponent<FollowScript>().newSize == 5) camera.GetComponent<FollowScript>().newSize = 15;
+            else camera.GetComponent<FollowScript>().newSize = 5;
+            camera.GetComponent<FollowScript>().spawnedPlayer = true;
         }
 
         bool allSleeping = true;
