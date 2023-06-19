@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using DelaunatorSharp;
 using DelaunatorSharp.Unity.Extensions;
+using UnityEngine.SceneManagement;
 
 public class DungeonGenerationScript : MonoBehaviour
 {
@@ -1202,9 +1203,14 @@ public class DungeonGenerationScript : MonoBehaviour
         return;
     }
 
-
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            // Restart the scene by pressing R
+            SceneManager.LoadScene("SceneMap1");
+        }
+
         bool allSleeping = true;
         if (!dungeonBuilt)
         {
