@@ -9,6 +9,7 @@ public abstract class Collectible : MonoBehaviour
 
     public ItemData CollectibleData => collectibleData;
 
+    // Functia care sterge obiectul de pe jos si invoca Event-ul la care este abonata functia Add din Inventory
     public virtual void Collect()
     {
         Destroy(gameObject);

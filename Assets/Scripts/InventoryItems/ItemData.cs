@@ -7,5 +7,7 @@ public abstract class ItemData : ScriptableObject
     public int maxStackSize;
     public string itemType;
     public Inventory Inventory { get; set; }
+    
+    // Functia este suprascrisa pentru fiecare tip de item in parte, in functie de ce face itemul
     public abstract void UseItem();
 }

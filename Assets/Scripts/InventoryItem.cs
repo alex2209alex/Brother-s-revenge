@@ -29,6 +29,9 @@ public class InventoryItem
         stackSize--;
     }
 
+    
+    // Functia care se apeleaza cand se apasa pe item, scade stack size-ul si daca e 0, il sterge
+    // Si apeleaza functia UseItem din itemData 
     public virtual void UseItem(ItemSlot itemSlot)
     {
         if(itemData.itemType == "Active")

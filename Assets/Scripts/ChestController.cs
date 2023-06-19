@@ -47,24 +47,10 @@ public class ChestController : MonoBehaviour
     {
         itemsInChest.Add(item);
     }
+    
+    // Adaugam lista cu itemele existente in joc
     public void populateList()
     {
-        /*
-        ArmorItem armor = ScriptableObject.CreateInstance<ArmorItem>();
-        SwordItem sword = ScriptableObject.CreateInstance<SwordItem>();
-        AttackSpeedPotionItem attackSpeedPotion = ScriptableObject.CreateInstance<AttackSpeedPotionItem>();
-        BootsItem boots = ScriptableObject.CreateInstance<BootsItem>();
-        CoinItem coin = ScriptableObject.CreateInstance<CoinItem>();
-        GlovesItem gloves = ScriptableObject.CreateInstance<GlovesItem>();
-        DamagePotion damagePotion = ScriptableObject.CreateInstance<DamagePotion>();
-        HPPotionItem hpPotion = ScriptableObject.CreateInstance<HPPotionItem>();
-        HpRegenPotionItem hpRegenPotion = ScriptableObject.CreateInstance<HpRegenPotionItem>();
-        PermanentASPotionItem permanentAsPotion = ScriptableObject.CreateInstance<PermanentASPotionItem>();
-        PermanentDmgPotionItem permanentDmgPotion = ScriptableObject.CreateInstance<PermanentDmgPotionItem>();
-        PermanentMSPotionItem permanentMsPotion = ScriptableObject.CreateInstance<PermanentMSPotionItem>();
-        SpeedPotionItem speedPotion = ScriptableObject.CreateInstance<SpeedPotionItem>();
-        */
-        // SpeedPotionItem speedPotion  = InventoryItems<SpeedPotionItem>("ScriptableObjects/InventoryItems/SpeedPotionItem");
         items.Add(sword);
         items.Add(attackSpeedPotion);
         items.Add(boots);
@@ -165,6 +151,8 @@ public class ChestController : MonoBehaviour
                 stateOfChest = 2;
             }
     }
+    
+    // Functia de adaugare a itemelor in inventar cand se deschide chestu
     void collectItems()
     {
         List<ItemData> itemsInChestCopy = new List<ItemData>();
