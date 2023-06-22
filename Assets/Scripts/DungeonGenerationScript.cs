@@ -50,6 +50,8 @@ public class DungeonGenerationScript : MonoBehaviour
     [SerializeField] private GameObject ChestPrefab;
     [SerializeField] private GameObject Enemy01, Enemy02, Enemy03, Enemy04, Enemy05, Enemy06, Enemy07;
     [SerializeField] private GameObject[] Enemies;
+
+    [SerializeField] private GameObject boxPrefab01;
     public GameObject camera;
 
     Dictionary<int, HashSet<int>> graphFinal = new Dictionary<int, HashSet<int>>();
@@ -222,32 +224,57 @@ public class DungeonGenerationScript : MonoBehaviour
 
         sortedRectangles = new List<GameObject>();
 
-        for (int i = 0; i < numRooms; i++)
+        for (int i = 0; i < numRooms; i += 2)
         {
             //Create a list of rectangles for rooms
-            int width = Mathf.RoundToInt(Mathf.Clamp(UnityEngine.Random.Range(meanWidth - stdDevWidth, meanWidth + stdDevWidth + 1), minWidth, maxWidth));
-            int height = Mathf.RoundToInt(Mathf.Clamp(UnityEngine.Random.Range(meanHeight - stdDevHeight, meanHeight + stdDevHeight + 1), minHeight, maxHeight));
+            int width1 = Mathf.RoundToInt(Mathf.Clamp(UnityEngine.Random.Range(meanWidth - stdDevWidth, meanWidth + stdDevWidth + 1), minWidth, maxWidth));
+            int height1 = Mathf.RoundToInt(Mathf.Clamp(UnityEngine.Random.Range(meanHeight - stdDevHeight, meanHeight + stdDevHeight + 1), minHeight, maxHeight));
 
-            GameObject rectangle = new GameObject("Rectangle" + i);
-            SpriteRenderer spriteRenderer = rectangle.AddComponent<SpriteRenderer>();
-            spriteRenderer.color = color;
-            spriteRenderer.sprite = CreateRectangleSprite(cellSize * width, cellSize * height);
-            rectangle.transform.position = new Vector2(UnityEngine.Random.Range(-10, 10), UnityEngine.Random.Range(-6, 6));
-            rectangles[i] = rectangle;
+            GameObject rectangle1 = new GameObject("Rectangle" + i);
+            SpriteRenderer spriteRenderer1 = rectangle1.AddComponent<SpriteRenderer>();
+            spriteRenderer1.color = color;
+            spriteRenderer1.sprite = CreateRectangleSprite(cellSize * width1, cellSize * height1);
+            rectangle1.transform.position = new Vector2(UnityEngine.Random.Range(-4, 4), UnityEngine.Random.Range(-4, 4));
+            rectangles[i] = rectangle1;
 
             //Add box colliders and rigid bodies to use the physics engine
-            BoxCollider2D boxCollider = rectangles[i].AddComponent<BoxCollider2D>();
-            boxCollider.size = new Vector2(width, height);
+            BoxCollider2D boxCollider1 = rectangles[i].AddComponent<BoxCollider2D>();
+            boxCollider1.size = new Vector2(width1, height1);
 
-            Rigidbody2D rigidbody = rectangle.AddComponent<Rigidbody2D>();
-            rectanglesRigidBodies[i] = rigidbody;
-            rigidbody.mass = 1.0f;
-            rigidbody.gravityScale = 0.0f;
-            rigidbody.drag = 2f;
-            rigidbody.angularDrag = 100f;
-            rectangle.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeRotation;
-            Vector2 force = new Vector2(UnityEngine.Random.Range(-1f, 1f), UnityEngine.Random.Range(-1f, 1f)).normalized;
-            rigidbody.AddForce(force * UnityEngine.Random.Range(50f, 100f));
+            Rigidbody2D rigidbody1 = rectangle1.AddComponent<Rigidbody2D>();
+            rectanglesRigidBodies[i] = rigidbody1;
+            rigidbody1.mass = 1.0f;
+            rigidbody1.gravityScale = 0.0f;
+            rigidbody1.drag = 2f;
+            rigidbody1.angularDrag = 100f;
+            rectangle1.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeRotation;
+            Vector2 force1 = new Vector2(UnityEngine.Random.Range(-1f, 1f), UnityEngine.Random.Range(-1f, 1f)).normalized;
+            rigidbody1.AddForce(force1 * UnityEngine.Random.Range(500f, 1200f));
+            rectangles[i].AddComponent<RoomScript>();
+
+            int width2 = Mathf.RoundToInt(Mathf.Clamp(UnityEngine.Random.Range(meanWidth - stdDevWidth, meanWidth + stdDevWidth + 1), minWidth, maxWidth));
+            int height2 = Mathf.RoundToInt(Mathf.Clamp(UnityEngine.Random.Range(meanHeight - stdDevHeight, meanHeight + stdDevHeight + 1), minHeight, maxHeight));
+
+            GameObject rectangle2 = new GameObject("Rectangle" + i);
+            SpriteRenderer spriteRenderer2 = rectangle2.AddComponent<SpriteRenderer>();
+            spriteRenderer2.color = color;
+            spriteRenderer2.sprite = CreateRectangleSprite(cellSize * width2, cellSize * height2);
+            rectangle2.transform.position = new Vector2(rectangle1.transform.position.x, rectangle1.transform.position.y);
+            rectangles[i+1] = rectangle2;
+
+            //Add box colliders and rigid bodies to use the physics engine
+            BoxCollider2D boxCollider2 = rectangles[i+1].AddComponent<BoxCollider2D>();
+            boxCollider2.size = new Vector2(width2, height2);
+
+            Rigidbody2D rigidbody2 = rectangle2.AddComponent<Rigidbody2D>();
+            rectanglesRigidBodies[i+1] = rigidbody2;
+            rigidbody2.mass = 1.0f;
+            rigidbody2.gravityScale = 0.0f;
+            rigidbody2.drag = 2f;
+            rigidbody2.angularDrag = 100f;
+            rectangle2.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeRotation;
+            Vector2 force2 = new Vector2(UnityEngine.Random.Range(-1f, 1f), UnityEngine.Random.Range(-1f, 1f)).normalized;
+            rigidbody2.AddForce(force2 * UnityEngine.Random.Range(500f, 1200f));
 
             rectangles[i].AddComponent<RoomScript>();
         }
@@ -538,10 +565,21 @@ public class DungeonGenerationScript : MonoBehaviour
                             graphFinal[fromNode].Add(toNode);
                             graphFinal[toNode].Add(fromNode);
 
+                            if (!extraEdgesGraph.ContainsKey(fromNode))
+                            {
+                                extraEdgesGraph[fromNode] = new HashSet<int>();
+                            }
+                            if (!extraEdgesGraph.ContainsKey(toNode))
+                            {
+                                extraEdgesGraph[toNode] = new HashSet<int>();
+                            }
+                            extraEdgesGraph[fromNode].Add(toNode);
+                            extraEdgesGraph[toNode].Add(fromNode);
+
                             if (!initialBuild)
                             {
                                 Debug.Log("Changed graph.");
-                                generateHallways(graphFinal, nodePairs, false, 1);
+                                generateHallways(extraEdgesGraph, nodePairs, false, 0);
                                 return;
                             }
                             continue;
@@ -785,12 +823,24 @@ public class DungeonGenerationScript : MonoBehaviour
                                         }
                                         graphFinal[fromNode].Add(toNode);
                                         graphFinal[toNode].Add(fromNode);
+
+                                        if (!extraEdgesGraph.ContainsKey(fromNode))
+                                        {
+                                            extraEdgesGraph[fromNode] = new HashSet<int>();
+                                        }
+                                        if (!extraEdgesGraph.ContainsKey(toNode))
+                                        {
+                                            extraEdgesGraph[toNode] = new HashSet<int>();
+                                        }
+                                        extraEdgesGraph[fromNode].Add(toNode);
+                                        extraEdgesGraph[toNode].Add(fromNode);
+
                                         Debug.Log("TWO");
                                         builtL = true;
                                         if (!initialBuild)
                                         {
                                             Debug.Log("Changed graph.");
-                                            generateHallways(graphFinal, nodePairs, false, 1);
+                                            generateHallways(extraEdgesGraph, nodePairs, false, 0);
                                             return;
                                         }
                                         break;
@@ -1023,12 +1073,24 @@ public class DungeonGenerationScript : MonoBehaviour
                                         }
                                         graphFinal[fromNode].Add(toNode);
                                         graphFinal[toNode].Add(fromNode);
+
+                                        if (!extraEdgesGraph.ContainsKey(fromNode))
+                                        {
+                                            extraEdgesGraph[fromNode] = new HashSet<int>();
+                                        }
+                                        if (!extraEdgesGraph.ContainsKey(toNode))
+                                        {
+                                            extraEdgesGraph[toNode] = new HashSet<int>();
+                                        }
+                                        extraEdgesGraph[fromNode].Add(toNode);
+                                        extraEdgesGraph[toNode].Add(fromNode);
+
                                         Debug.Log("ONE");
                                         builtL = true;
                                         if (!initialBuild)
                                         {
                                             Debug.Log("Changed graph.");
-                                            generateHallways(graphFinal, nodePairs, false, 1);
+                                            generateHallways(extraEdgesGraph, nodePairs, false, 0);
                                             return;
                                         }
                                         break;
@@ -1188,10 +1250,22 @@ public class DungeonGenerationScript : MonoBehaviour
                             }
                             graphFinal[fromNode].Add(toNode);
                             graphFinal[toNode].Add(fromNode);
+
+                            if (!extraEdgesGraph.ContainsKey(fromNode))
+                            {
+                                extraEdgesGraph[fromNode] = new HashSet<int>();
+                            }
+                            if (!extraEdgesGraph.ContainsKey(toNode))
+                            {
+                                extraEdgesGraph[toNode] = new HashSet<int>();
+                            }
+                            extraEdgesGraph[fromNode].Add(toNode);
+                            extraEdgesGraph[toNode].Add(fromNode);
+
                             if (!initialBuild)
                             {
                                 Debug.Log("Changed graph.");
-                                generateHallways(graphFinal, nodePairs, false, 1);
+                                generateHallways(extraEdgesGraph, nodePairs, false, 0);
                                 return;
                             }
                             continue;
@@ -1200,7 +1274,7 @@ public class DungeonGenerationScript : MonoBehaviour
                 }
             }
         }
-        generateHallways(graphFinal, nodePairs, false, buildStep + 1);
+        generateHallways(extraEdgesGraph, nodePairs, false, buildStep + 1);
         return;
     }
 
@@ -1413,7 +1487,7 @@ public class DungeonGenerationScript : MonoBehaviour
                 HashSet<string> nodePairs = new HashSet<string>();
 
                 generateHallways(extraEdgesGraph, nodePairs, true);
-                generateHallways(extraEdgesGraph, nodePairs, false, 1);
+                generateHallways(extraEdgesGraph, nodePairs, false, 0);
 
                 List<HashSet<int>> connectedComponents = new List<HashSet<int>>();
                 HashSet<int> visitedNodes = new HashSet<int>();
@@ -1493,7 +1567,6 @@ public class DungeonGenerationScript : MonoBehaviour
                     Vector3 chest01Position = new Vector3(Mathf.Round(sortedRectangles[firstConnectedComponent[treasureRoom]].transform.position.x + sizeInTilesTreasure01.x / 2) + 1.5f, Mathf.Round(sortedRectangles[firstConnectedComponent[treasureRoom]].transform.position.y + sizeInTilesTreasure01.y / 2) + 0.8f, 0);
                     Vector3 chest02Position = new Vector3(Mathf.Round(sortedRectangles[firstConnectedComponent[treasureRoom]].transform.position.x + sizeInTilesTreasure01.x / 2) - 1.5f, Mathf.Round(sortedRectangles[firstConnectedComponent[treasureRoom]].transform.position.y + sizeInTilesTreasure01.y / 2) + 0.8f, 0);
 
-
                     Instantiate(ChestPrefab, chest01Position, Quaternion.identity);
                     Instantiate(ChestPrefab, chest02Position, Quaternion.identity);
 
@@ -1503,6 +1576,29 @@ public class DungeonGenerationScript : MonoBehaviour
                     for (int i = 0; i < connectedRoomsCount; ++i)
                     {
                         Debug.Log("i = " + i);
+
+                        if (i != treasureRoom)
+                        {
+                            var room = sortedRectangles[firstConnectedComponent[i]];
+                            Vector3Int sizeInTilesRoom = new Vector3Int(
+                            Mathf.RoundToInt(room.GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
+                            Mathf.RoundToInt(room.GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
+                            1);
+
+                            Vector3 cornerLowerLeft = new Vector3(room.transform.position.x + 1.5f, room.transform.position.y + 2.5f, 0);
+                            Vector3 cornerLowerRight = new Vector3(room.transform.position.x + room.GetComponent<SpriteRenderer>().bounds.size.x - 1.5f, room.transform.position.y + 2.5f, 0);
+                            Vector3 cornerUpperLeft = new Vector3(room.transform.position.x + 1.5f, room.transform.position.y + room.GetComponent<SpriteRenderer>().bounds.size.y - 1.5f, 0);
+                            Vector3 cornerUpperRight = new Vector3(room.transform.position.x + room.GetComponent<SpriteRenderer>().bounds.size.x - 1.5f, room.transform.position.y + room.GetComponent<SpriteRenderer>().bounds.size.y - 1.5f, 0);
+
+                            if (Random.Range(0f, 1f) < 0.30f)
+                            {
+                                GameObject box01 = Instantiate(boxPrefab01, cornerLowerLeft, Quaternion.identity);
+                                GameObject box02 = Instantiate(boxPrefab01, cornerLowerRight, Quaternion.identity);
+                                GameObject box03 = Instantiate(boxPrefab01, cornerUpperLeft, Quaternion.identity);
+                                GameObject box04 = Instantiate(boxPrefab01, cornerUpperRight, Quaternion.identity);
+                            }
+                        }
+
                         if (i != treasureRoom && i != startingRoom && i != enemyRoom01 && i != enemyRoom02 && i != enemyRoom03)
                         {
                             Vector3Int sizeInTilesRoom = new Vector3Int(
