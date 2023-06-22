@@ -16,6 +16,7 @@ public class DungeonGenerationScript : MonoBehaviour
     public int startingRoom;
     public int meanWidth, stdDevWidth, minWidth, maxWidth;
     public int meanHeight, stdDevHeight, minHeight, maxHeight;
+    public int minWidthFinal, minHeightFinal;
 
     public float cellSize;
     public Color color = Color.white;
@@ -231,7 +232,7 @@ public class DungeonGenerationScript : MonoBehaviour
             SpriteRenderer spriteRenderer = rectangle.AddComponent<SpriteRenderer>();
             spriteRenderer.color = color;
             spriteRenderer.sprite = CreateRectangleSprite(cellSize * width, cellSize * height);
-            rectangle.transform.position = new Vector2(UnityEngine.Random.Range(-6, 6), UnityEngine.Random.Range(-6, 6));
+            rectangle.transform.position = new Vector2(UnityEngine.Random.Range(-10, 10), UnityEngine.Random.Range(-6, 6));
             rectangles[i] = rectangle;
 
             //Add box colliders and rigid bodies to use the physics engine
@@ -540,7 +541,7 @@ public class DungeonGenerationScript : MonoBehaviour
                             if (!initialBuild)
                             {
                                 Debug.Log("Changed graph.");
-                                generateHallways(extraEdgesGraph, nodePairs, false, 1);
+                                generateHallways(graphFinal, nodePairs, false, 1);
                                 return;
                             }
                             continue;
@@ -789,7 +790,7 @@ public class DungeonGenerationScript : MonoBehaviour
                                         if (!initialBuild)
                                         {
                                             Debug.Log("Changed graph.");
-                                            generateHallways(extraEdgesGraph, nodePairs, false, 1);
+                                            generateHallways(graphFinal, nodePairs, false, 1);
                                             return;
                                         }
                                         break;
@@ -1027,7 +1028,7 @@ public class DungeonGenerationScript : MonoBehaviour
                                         if (!initialBuild)
                                         {
                                             Debug.Log("Changed graph.");
-                                            generateHallways(extraEdgesGraph, nodePairs, false, 1);
+                                            generateHallways(graphFinal, nodePairs, false, 1);
                                             return;
                                         }
                                         break;
@@ -1190,7 +1191,7 @@ public class DungeonGenerationScript : MonoBehaviour
                             if (!initialBuild)
                             {
                                 Debug.Log("Changed graph.");
-                                generateHallways(extraEdgesGraph, nodePairs, false, 1);
+                                generateHallways(graphFinal, nodePairs, false, 1);
                                 return;
                             }
                             continue;
@@ -1199,7 +1200,7 @@ public class DungeonGenerationScript : MonoBehaviour
                 }
             }
         }
-        generateHallways(extraEdgesGraph, nodePairs, false, buildStep + 1);
+        generateHallways(graphFinal, nodePairs, false, buildStep + 1);
         return;
     }
 
@@ -1236,15 +1237,26 @@ public class DungeonGenerationScript : MonoBehaviour
             {
                 Debug.Log("All rigidbodies have gone to sleep");
                 dungeonBuilt = true;
+                List<GameObject> rectanglesToDelete = new List<GameObject>();
 
                 foreach (GameObject rectangle in rectangles)
                 {
                     Rigidbody2D rb = rectangle.GetComponent<Rigidbody2D>();
-                    Vector2 roundedPos = new Vector2(Mathf.Round(rb.position.x), Mathf.Round(rb.position.y));
-                    rb.isKinematic = true;
-                    rb.position = roundedPos;
-                    rb.gameObject.transform.position = roundedPos;
-                    sortedRectangles.Add(rb.gameObject);
+                    if (rb.GetComponent<SpriteRenderer>().bounds.size.x < minWidthFinal || rb.GetComponent<SpriteRenderer>().bounds.size.y < minHeightFinal)
+                    {
+                        rectanglesToDelete.Add(rectangle);
+                    } else {
+                        Vector2 roundedPos = new Vector2(Mathf.Round(rb.position.x), Mathf.Round(rb.position.y));
+                        rb.isKinematic = true;
+                        rb.position = roundedPos;
+                        rb.gameObject.transform.position = roundedPos;
+                        sortedRectangles.Add(rb.gameObject);
+                    }
+                }
+
+                foreach (GameObject rectangleToDelete in rectanglesToDelete)
+                {
+                    Destroy(rectangleToDelete);
                 }
 
                 sortedRectangles.Sort((r1, r2) =>

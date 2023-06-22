@@ -5648,7 +5648,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   numRooms: 26
-  mainRoomsPercentage: 0.5
+  mainRoomsPercentage: 0.8
   extraEdgesPercentage: 0.65
   aspectRatioWeight: 1150
   chanceTileFloor01: 0.93
@@ -5657,11 +5657,13 @@ MonoBehaviour:
   meanWidth: 8
   stdDevWidth: 5
   minWidth: 7
-  maxWidth: 15
+  maxWidth: 13
   meanHeight: 8
   stdDevHeight: 5
   minHeight: 7
-  maxHeight: 15
+  maxHeight: 13
+  minWidthFinal: 6
+  minHeightFinal: 7
   cellSize: 1
   color: {r: 1, g: 1, b: 1, a: 1}
   Map: {fileID: 1287944675}
