@@ -55,6 +55,7 @@ public class DungeonGenerationScript : MonoBehaviour
     public GameObject camera;
 
     Dictionary<int, HashSet<int>> graphFinal = new Dictionary<int, HashSet<int>>();
+    List<Vector3> objectPositions = new List<Vector3>();
 
     Sprite CreateRectangleSprite(float width, float height)
     {
@@ -346,6 +347,20 @@ public class DungeonGenerationScript : MonoBehaviour
             }
         }
     }
+
+    bool IsPositionOccupied(Vector3 position)
+    {
+        return objectPositions.Contains(position);
+    }
+
+    bool IsWall(Vector3 position)
+    {
+        TileBase wallTile = tilemapWalls.GetTile(tilemapWalls.WorldToCell(position));
+        TileBase floorTile = tilemapFloorWalls.GetTile(tilemapFloorWalls.WorldToCell(position));
+        
+        return (wallTile == null && floorTile == null);
+    }
+
     void generateHallways(Dictionary<int, HashSet<int>> extraEdgesGraph, HashSet<string> nodePairs, bool initialBuild, int buildStep = 0)
     {
         //Build the hallways either first time or try to connect new rooms
@@ -1590,12 +1605,94 @@ public class DungeonGenerationScript : MonoBehaviour
                             Vector3 cornerUpperLeft = new Vector3(room.transform.position.x + 1.5f, room.transform.position.y + room.GetComponent<SpriteRenderer>().bounds.size.y - 1.5f, 0);
                             Vector3 cornerUpperRight = new Vector3(room.transform.position.x + room.GetComponent<SpriteRenderer>().bounds.size.x - 1.5f, room.transform.position.y + room.GetComponent<SpriteRenderer>().bounds.size.y - 1.5f, 0);
 
-                            if (Random.Range(0f, 1f) < 0.30f)
+                            if (Random.Range(0f, 1f) < .45f)
                             {
-                                GameObject box01 = Instantiate(boxPrefab01, cornerLowerLeft, Quaternion.identity);
-                                GameObject box02 = Instantiate(boxPrefab01, cornerLowerRight, Quaternion.identity);
-                                GameObject box03 = Instantiate(boxPrefab01, cornerUpperLeft, Quaternion.identity);
-                                GameObject box04 = Instantiate(boxPrefab01, cornerUpperRight, Quaternion.identity);
+                                if (Random.Range(0f, 1f) < .3f)
+                                {
+                                    int boxCount = Random.Range(1, 8);
+                                    for (int j = 0; j < boxCount; ++j)
+                                    {
+                                        Vector3 boxPosition = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 2), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 4))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 5), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 1.5f, 0);
+
+                                        if (!IsPositionOccupied(boxPosition))
+                                        {
+                                            GameObject boxN = Instantiate(boxPrefab01, boxPosition, Quaternion.identity);
+                                            objectPositions.Add(boxPosition);
+                                        }
+                                    }
+                                }
+                                else if (Random.Range(0f, 1f) < 0.05f)
+                                {
+                                    GameObject box1 = Instantiate(boxPrefab01, cornerLowerLeft, Quaternion.identity);
+                                    GameObject box2 = Instantiate(boxPrefab01, cornerLowerRight, Quaternion.identity);
+                                    GameObject box3 = Instantiate(boxPrefab01, cornerUpperLeft, Quaternion.identity);
+                                    GameObject box4 = Instantiate(boxPrefab01, cornerUpperRight, Quaternion.identity);
+                                }
+                                else
+                                {
+                                    if (Random.Range(0f, 1f) < 0.3f)
+                                    {
+                                        for (Vector3 j = cornerLowerLeft; j.x <= cornerLowerRight.x; j += new Vector3(1, 0, 0))
+                                        {
+                                            if (!IsPositionOccupied(j) && !IsWall(j + new Vector3(0, -1, 0)))
+                                            {
+                                                GameObject boxN = Instantiate(boxPrefab01, j, Quaternion.identity);
+                                                objectPositions.Add(j);
+                                            }
+                                        }
+                                    }
+                                    if (Random.Range(0f, 1f) < 0.3f)
+                                    {
+                                        for (Vector3 j = cornerUpperLeft; j.x <= cornerUpperRight.x; j += new Vector3(1, 0, 0))
+                                        {
+                                            if (!IsPositionOccupied(j) && !IsWall(j + new Vector3(0, 1, 0)))
+                                            {
+                                                GameObject boxN = Instantiate(boxPrefab01, j, Quaternion.identity);
+                                                objectPositions.Add(j);
+                                            }
+                                        }
+                                    }
+                                    if (Random.Range(0f, 1f) < 0.3f)
+                                    {
+                                        if (!IsPositionOccupied(cornerUpperLeft))
+                                        {
+                                            GameObject boxN = Instantiate(boxPrefab01, cornerUpperLeft, Quaternion.identity);
+                                            objectPositions.Add(cornerUpperLeft);
+                                        }
+                                        for (Vector3 j = cornerUpperLeft + new Vector3(0, -1, 0); j.y >= cornerLowerLeft.y; j += new Vector3(0, -1, 0))
+                                        {
+                                            if (!IsPositionOccupied(j) && !IsWall(j + new Vector3(-1, 0, 0)))
+                                            {
+                                                GameObject boxN = Instantiate(boxPrefab01, j, Quaternion.identity);
+                                                objectPositions.Add(j);
+                                            }
+                                            else
+                                            {
+                                                j += new Vector3(0, -1, 0);
+                                            }
+                                        }
+                                    }
+                                    if (Random.Range(0f, 1f) < 0.3f)
+                                    {
+                                        if (!IsPositionOccupied(cornerUpperRight))
+                                        {
+                                            GameObject boxN = Instantiate(boxPrefab01, cornerUpperRight, Quaternion.identity);
+                                            objectPositions.Add(cornerUpperRight);
+                                        }
+                                        for (Vector3 j = cornerUpperRight + new Vector3(0, -1, 0); j.y >= cornerLowerRight.y; j += new Vector3(0, -1, 0))
+                                        {
+                                            if (!IsPositionOccupied(j) && !IsWall(j + new Vector3(1, 0, 0)))
+                                            {
+                                                GameObject boxN = Instantiate(boxPrefab01, j, Quaternion.identity);
+                                                objectPositions.Add(j);
+                                            }
+                                            else
+                                            {
+                                                j += new Vector3(0, -1, 0);
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
 
