@@ -5728,7 +5728,7 @@ GameObject:
   - component: {fileID: 352315196}
   m_Layer: 0
   m_Name: DungeonManager
-  m_TagString: Untagged
+  m_TagString: DungeonManager
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -5808,6 +5808,7 @@ MonoBehaviour:
   Enemies: []
   boxPrefab01: {fileID: 4348587815591184570, guid: 0e6f6ad7a87e4554bb2fffa5509fd209, type: 3}
   camera: {fileID: 519420028}
+  objectPositions: []
 --- !u!4 &352315195
 Transform:
   m_ObjectHideFlags: 0

@@ -55,7 +55,7 @@ public class DungeonGenerationScript : MonoBehaviour
     public GameObject camera;
 
     Dictionary<int, HashSet<int>> graphFinal = new Dictionary<int, HashSet<int>>();
-    List<Vector3> objectPositions = new List<Vector3>();
+    public List<Vector3> objectPositions = new List<Vector3>();
 
     Sprite CreateRectangleSprite(float width, float height)
     {
