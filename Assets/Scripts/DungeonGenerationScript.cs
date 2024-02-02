@@ -12,7 +12,7 @@ public class DungeonGenerationScript : MonoBehaviour
     public float mainRoomsPercentage = 0.08f;
     public float extraEdgesPercentage = 0.15f;
     public float aspectRatioWeight = 0f;
-    public float chanceTileFloor01, chanceTileFloor02;
+    public float chanceTileFloor01, chanceTileFloor02, chanceTileFloor03, chanceTileFloor04;
     public int startingRoom;
     public int meanWidth, stdDevWidth, minWidth, maxWidth;
     public int meanHeight, stdDevHeight, minHeight, maxHeight;
@@ -42,20 +42,27 @@ public class DungeonGenerationScript : MonoBehaviour
 
     public Tilemap tilemapFloor, tilemapFloorWalls, tilemapDecoratives, tilemapWalls;
     public Tile tileFloor01, tileBricks01, tileWallUpper, tileWallUpperLeft, tileWallUpperRight, tileWallLowerLeft, tileWallLowerRight, tileWallLeft, tileWallRight;
-    public Tile tileFloor02, tileFloor03;
+    public Tile tileFloor02, tileFloor03, tileFloor04;
     public Tile tileCornerUpperLeft, tileCornerUpperRight, tileCornerLowerLeft, tileCornerLowerRight, tileCorner02LowerLeft, tileCorner02LowerRight;
     public Tile tileBricks02, tileBricks03;
+    public Tile tileCarpet01Upper, tileCarpet01UpperLeft, tileCarpet01UpperRight, tileCarpet01Lower, tileCarpet01LowerLeft, tileCarpet01LowerRight, tileCarpet01Left, tileCarpet01Right, tileCarpet01Center;
+    public Tile tileCarpet02Upper, tileCarpet02UpperLeft, tileCarpet02UpperRight, tileCarpet02Lower, tileCarpet02LowerLeft, tileCarpet02LowerRight, tileCarpet02Left, tileCarpet02Right, tileCarpet02Center;
+
 
     //Prefabs
     [SerializeField] private GameObject ChestPrefab;
-    [SerializeField] private GameObject Enemy01, Enemy02, Enemy03, Enemy04, Enemy05, Enemy06, Enemy07;
     [SerializeField] private GameObject[] Enemies;
+    public int enemiesCount;
 
     [SerializeField] private GameObject boxPrefab01;
-    public GameObject camera;
+    public GameObject camera0;
 
     Dictionary<int, HashSet<int>> graphFinal = new Dictionary<int, HashSet<int>>();
     public List<Vector3> objectPositions = new List<Vector3>();
+    public List<Vector3> objectPositionsSolid = new List<Vector3>();
+    public GameObject DungeonManager, DijkstraMap;
+
+    public GameObject EnemyNEW;
 
     Sprite CreateRectangleSprite(float width, float height)
     {
@@ -194,6 +201,132 @@ public class DungeonGenerationScript : MonoBehaviour
         return minimalSpanningTree;
     }
 
+    void PlaceCarpet(Vector3 cornerLowerLeft, Vector3 cornerLowerRight, Vector3 cornerUpperLeft, Vector3 cornerUpperRight, TileBase tileCarpet01Center, TileBase tileCarpet01Lower, TileBase tileCarpet01Upper, TileBase tileCarpet01Left, TileBase tileCarpet01Right, TileBase tileCarpet01LowerLeft, TileBase tileCarpet01LowerRight, TileBase tileCarpet01UpperLeft, TileBase tileCarpet01UpperRight)
+    {
+        if (Random.Range(0f, 1f) < .5) {
+            int randomLeft = Mathf.FloorToInt(Random.Range(cornerLowerLeft.x, cornerLowerRight.x - 2));
+            int randomLower = Mathf.FloorToInt(Random.Range(cornerLowerLeft.y, cornerUpperLeft.y - 2));
+
+            Vector3Int jInt01 = new Vector3Int(Mathf.FloorToInt(randomLeft + 1), Mathf.FloorToInt(randomLower + 1), Mathf.FloorToInt(cornerLowerLeft.z));
+            tilemapFloor.SetTile(jInt01, tileCarpet01LowerLeft);
+
+            Vector3Int jInt02 = new Vector3Int(Mathf.FloorToInt(randomLeft + 2), Mathf.FloorToInt(randomLower + 1), Mathf.FloorToInt(cornerLowerRight.z));
+            tilemapFloor.SetTile(jInt02, tileCarpet01LowerRight);
+
+            Vector3Int jInt03 = new Vector3Int(Mathf.FloorToInt(randomLeft + 1), Mathf.FloorToInt(randomLower + 2), Mathf.FloorToInt(cornerUpperLeft.z));
+            tilemapFloor.SetTile(jInt03, tileCarpet01UpperLeft);
+
+            Vector3Int jInt04 = new Vector3Int(Mathf.FloorToInt(randomLeft + 2), Mathf.FloorToInt(randomLower + 2), Mathf.FloorToInt(cornerUpperRight.z));
+            tilemapFloor.SetTile(jInt04, tileCarpet01UpperRight);
+        } else if (Random.Range(0f, 1f) < .8f) //Fill carpet no edges
+        {
+            for (Vector3 j = cornerLowerLeft; j.x <= cornerLowerRight.x; j += new Vector3(1, 0, 0))
+            {
+                if (j == cornerLowerLeft || j == cornerLowerRight) continue;
+
+                Vector3Int jInt = new Vector3Int(Mathf.FloorToInt(j.x), Mathf.FloorToInt(j.y + 1), Mathf.FloorToInt(j.z));
+
+                for (Vector3 k = cornerUpperLeft + new Vector3(0, -1, 0); k.y >= cornerLowerLeft.y; k += new Vector3(0, -1, 0))
+                {
+                    if (k == cornerUpperLeft + new Vector3(0, -1, 0) || k == cornerLowerLeft) continue;
+
+                    Vector3Int kInt = new Vector3Int(Mathf.FloorToInt(j.x), Mathf.FloorToInt(k.y), Mathf.FloorToInt(k.z));
+                    tilemapFloor.SetTile(kInt, tileCarpet01Center);
+                }
+            }
+
+            for (Vector3 j = cornerLowerLeft; j.x <= cornerLowerRight.x; j += new Vector3(1, 0, 0))
+            {
+                if (j == cornerLowerLeft || j == cornerLowerRight) continue;
+
+                Vector3Int jInt = new Vector3Int(Mathf.FloorToInt(j.x), Mathf.FloorToInt(j.y + 1), Mathf.FloorToInt(j.z));
+                tilemapFloor.SetTile(jInt, tileCarpet01Lower);
+            }
+
+            for (Vector3 j = cornerUpperLeft; j.x <= cornerUpperRight.x; j += new Vector3(1, 0, 0))
+            {
+                if (j == cornerUpperLeft || j == cornerUpperRight) continue;
+                Vector3Int jInt = new Vector3Int(Mathf.FloorToInt(j.x), Mathf.FloorToInt(j.y - 1), Mathf.FloorToInt(j.z));
+                tilemapFloor.SetTile(jInt, tileCarpet01Upper);
+            }
+
+            for (Vector3 j = cornerUpperLeft + new Vector3(0, -1, 0); j.y >= cornerLowerLeft.y; j += new Vector3(0, -1, 0))
+            {
+                if (j == cornerUpperLeft + new Vector3(0, -1, 0) || j == cornerLowerLeft) continue;
+                Vector3Int jInt = new Vector3Int(Mathf.FloorToInt(j.x + 1), Mathf.FloorToInt(j.y), Mathf.FloorToInt(j.z));
+                tilemapFloor.SetTile(jInt, tileCarpet01Left);
+            }
+
+            for (Vector3 j = cornerUpperRight + new Vector3(0, -1, 0); j.y >= cornerLowerRight.y; j += new Vector3(0, -1, 0))
+            {
+                if (j == cornerUpperRight + new Vector3(0, -1, 0) || j == cornerLowerRight) continue;
+                Vector3Int jInt = new Vector3Int(Mathf.FloorToInt(j.x - 1), Mathf.FloorToInt(j.y), Mathf.FloorToInt(j.z));
+                tilemapFloor.SetTile(jInt, tileCarpet01Right);
+            }
+
+            Vector3Int jInt01 = new Vector3Int(Mathf.FloorToInt(cornerLowerLeft.x + 1), Mathf.FloorToInt(cornerLowerLeft.y + 1), Mathf.FloorToInt(cornerLowerLeft.z));
+            tilemapFloor.SetTile(jInt01, tileCarpet01LowerLeft);
+
+            Vector3Int jInt02 = new Vector3Int(Mathf.FloorToInt(cornerLowerRight.x - 1), Mathf.FloorToInt(cornerLowerRight.y + 1), Mathf.FloorToInt(cornerLowerRight.z));
+            tilemapFloor.SetTile(jInt02, tileCarpet01LowerRight);
+
+            Vector3Int jInt03 = new Vector3Int(Mathf.FloorToInt(cornerUpperLeft.x + 1), Mathf.FloorToInt(cornerUpperLeft.y - 1), Mathf.FloorToInt(cornerUpperLeft.z));
+            tilemapFloor.SetTile(jInt03, tileCarpet01UpperLeft);
+
+            Vector3Int jInt04 = new Vector3Int(Mathf.FloorToInt(cornerUpperRight.x - 1), Mathf.FloorToInt(cornerUpperRight.y - 1), Mathf.FloorToInt(cornerUpperRight.z));
+            tilemapFloor.SetTile(jInt04, tileCarpet01UpperRight);
+        }
+        else //Fill carpet
+        {
+            for (Vector3 j = cornerLowerLeft; j.x <= cornerLowerRight.x; j += new Vector3(1, 0, 0))
+            {
+                Vector3Int jInt = new Vector3Int(Mathf.FloorToInt(j.x), Mathf.FloorToInt(j.y + 1), Mathf.FloorToInt(j.z));
+
+                for (Vector3 k = cornerUpperLeft + new Vector3(0, -1, 0); k.y >= cornerLowerLeft.y; k += new Vector3(0, -1, 0))
+                {
+                    Vector3Int kInt = new Vector3Int(Mathf.FloorToInt(j.x), Mathf.FloorToInt(k.y), Mathf.FloorToInt(k.z));
+                    tilemapFloor.SetTile(kInt, tileCarpet01Center);
+                }
+            }
+
+            for (Vector3 j = cornerLowerLeft; j.x <= cornerLowerRight.x; j += new Vector3(1, 0, 0))
+            {
+                Vector3Int jInt = new Vector3Int(Mathf.FloorToInt(j.x), Mathf.FloorToInt(j.y), Mathf.FloorToInt(j.z));
+                tilemapFloor.SetTile(jInt, tileCarpet01Lower);
+            }
+
+            for (Vector3 j = cornerUpperLeft; j.x <= cornerUpperRight.x; j += new Vector3(1, 0, 0))
+            {
+                Vector3Int jInt = new Vector3Int(Mathf.FloorToInt(j.x), Mathf.FloorToInt(j.y), Mathf.FloorToInt(j.z));
+                tilemapFloor.SetTile(jInt, tileCarpet01Upper);
+            }
+
+            for (Vector3 j = cornerUpperLeft + new Vector3(0, -1, 0); j.y >= cornerLowerLeft.y; j += new Vector3(0, -1, 0))
+            {
+                Vector3Int jInt = new Vector3Int(Mathf.FloorToInt(j.x), Mathf.FloorToInt(j.y), Mathf.FloorToInt(j.z));
+                tilemapFloor.SetTile(jInt, tileCarpet01Left);
+            }
+
+            for (Vector3 j = cornerUpperRight + new Vector3(0, -1, 0); j.y >= cornerLowerRight.y; j += new Vector3(0, -1, 0))
+            {
+                Vector3Int jInt = new Vector3Int(Mathf.FloorToInt(j.x), Mathf.FloorToInt(j.y), Mathf.FloorToInt(j.z));
+                tilemapFloor.SetTile(jInt, tileCarpet01Right);
+            }
+
+            Vector3Int jInt01 = new Vector3Int(Mathf.FloorToInt(cornerLowerLeft.x), Mathf.FloorToInt(cornerLowerLeft.y), Mathf.FloorToInt(cornerLowerLeft.z));
+            tilemapFloor.SetTile(jInt01, tileCarpet01LowerLeft);
+
+            Vector3Int jInt02 = new Vector3Int(Mathf.FloorToInt(cornerLowerRight.x), Mathf.FloorToInt(cornerLowerRight.y), Mathf.FloorToInt(cornerLowerRight.z));
+            tilemapFloor.SetTile(jInt02, tileCarpet01LowerRight);
+
+            Vector3Int jInt03 = new Vector3Int(Mathf.FloorToInt(cornerUpperLeft.x), Mathf.FloorToInt(cornerUpperLeft.y), Mathf.FloorToInt(cornerUpperLeft.z));
+            tilemapFloor.SetTile(jInt03, tileCarpet01UpperLeft);
+
+            Vector3Int jInt04 = new Vector3Int(Mathf.FloorToInt(cornerUpperRight.x), Mathf.FloorToInt(cornerUpperRight.y), Mathf.FloorToInt(cornerUpperRight.z));
+            tilemapFloor.SetTile(jInt04, tileCarpet01UpperRight);
+        }
+    }
+
     TileBase getRandomTileFloor()
     {
         //Get a random tile based on a chance
@@ -208,16 +341,30 @@ public class DungeonGenerationScript : MonoBehaviour
         {
             tileToPaint = tileFloor02;
         }
-        else
+        else if (randomValue < chanceTileFloor03)
         {
             tileToPaint = tileFloor03;
         }
+        else
+        {
+            tileToPaint = tileFloor04;
+        }
         return tileToPaint;
     }
+
+    private IEnumerator MakeDynamicAfterDelay(float delay, BoxCollider2D boxCollider1)
+    {
+        yield return new WaitForSeconds(delay);
+        boxCollider1.enabled = true;
+    }
+
+    public void RestartScene()
+    {
+        SceneManager.LoadScene("SceneMap1");
+    }
+
     void Start()
     {
-        Enemies = new GameObject[] { Enemy01, Enemy02, Enemy03, Enemy04, Enemy05, Enemy06, Enemy07 };
-
         cellSize = Map.cellSize[0] * 100;
         rectangles = new GameObject[numRooms];
 
@@ -230,6 +377,23 @@ public class DungeonGenerationScript : MonoBehaviour
             //Create a list of rectangles for rooms
             int width1 = Mathf.RoundToInt(Mathf.Clamp(UnityEngine.Random.Range(meanWidth - stdDevWidth, meanWidth + stdDevWidth + 1), minWidth, maxWidth));
             int height1 = Mathf.RoundToInt(Mathf.Clamp(UnityEngine.Random.Range(meanHeight - stdDevHeight, meanHeight + stdDevHeight + 1), minHeight, maxHeight));
+
+            if (i == 0)
+            {
+                int baseWidth = Random.Range(11, 15);
+                int baseHeight = baseWidth * 2;
+
+                if (Random.value < 0.5f)
+                {
+                    width1 = baseHeight;
+                    height1 = baseWidth;
+                }
+                else
+                {
+                    width1 = baseWidth;
+                    height1 = baseHeight;
+                }
+            }
 
             GameObject rectangle1 = new GameObject("Rectangle" + i);
             SpriteRenderer spriteRenderer1 = rectangle1.AddComponent<SpriteRenderer>();
@@ -250,8 +414,19 @@ public class DungeonGenerationScript : MonoBehaviour
             rigidbody1.angularDrag = 100f;
             rectangle1.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeRotation;
             Vector2 force1 = new Vector2(UnityEngine.Random.Range(-1f, 1f), UnityEngine.Random.Range(-1f, 1f)).normalized;
-            rigidbody1.AddForce(force1 * UnityEngine.Random.Range(500f, 1200f));
-            rectangles[i].AddComponent<RoomScript>();
+            if (i != 0) rigidbody1.AddForce(force1 * UnityEngine.Random.Range(500f, 1200f));
+            if (i != 0) rectangles[i].AddComponent<RoomScript>();
+
+            if (i == 0)
+            {
+                boxCollider1.enabled = false;
+                StartCoroutine(MakeDynamicAfterDelay(1f, boxCollider1));
+            }
+
+
+
+
+
 
             int width2 = Mathf.RoundToInt(Mathf.Clamp(UnityEngine.Random.Range(meanWidth - stdDevWidth, meanWidth + stdDevWidth + 1), minWidth, maxWidth));
             int height2 = Mathf.RoundToInt(Mathf.Clamp(UnityEngine.Random.Range(meanHeight - stdDevHeight, meanHeight + stdDevHeight + 1), minHeight, maxHeight));
@@ -277,7 +452,7 @@ public class DungeonGenerationScript : MonoBehaviour
             Vector2 force2 = new Vector2(UnityEngine.Random.Range(-1f, 1f), UnityEngine.Random.Range(-1f, 1f)).normalized;
             rigidbody2.AddForce(force2 * UnityEngine.Random.Range(500f, 1200f));
 
-            rectangles[i].AddComponent<RoomScript>();
+            rectangles[i+1].AddComponent<RoomScript>();
         }
     }
 
@@ -348,9 +523,19 @@ public class DungeonGenerationScript : MonoBehaviour
         }
     }
 
-    bool IsPositionOccupied(Vector3 position)
+    public bool IsPositionOccupied(Vector3 position)
     {
         return objectPositions.Contains(position);
+    }
+
+    public bool IsPositionOccupiedSolid(Vector3 position)
+    {
+        return objectPositionsSolid.Contains(position);
+    }
+
+    public bool IsPositionOccupiedSolid(Vector2Int position)
+    {
+        return objectPositionsSolid.Contains(new Vector3(position.x + 0.5f, position.y + 0.5f, 0));
     }
 
     bool IsWall(Vector3 position)
@@ -602,7 +787,9 @@ public class DungeonGenerationScript : MonoBehaviour
                     }
 
                     if (builtN) continue;
-                    if (case_orientation && startPos1.y <= startPos2.y)
+
+                    //if ((case_orientation && startPos1.x <= startPos2.x && startPos2.x < startPos1.x + sizeInTiles1.x - 5) || (!case_orientation && startPos1.x > startPos2.x && startPos1.x < startPos2.x + sizeInTiles2.x - 5))
+                    if (case_orientation && startPos1.y <= startPos2.y) //L Hallway
                     {
                         float randomNumber = Random.value;
                         for (int j = 0; j < 2; ++j)
@@ -614,6 +801,13 @@ public class DungeonGenerationScript : MonoBehaviour
                                     for (int endL = startPos1.x + sizeInTiles1.x - 4; endL > startPos1.x + 1; --endL)
                                     {
                                         bool intersectionL = false;
+
+                                        if (endL > startPos2.x) //Fix impossible L hallways bug #1
+                                        {
+                                            intersectionL = true;   //  -
+                                            continue;               // I
+                                        }
+
                                         for (int i = startPos2.x; i >= endL; --i)
                                         {
                                             if (tilemapFloor.GetTile(new Vector3Int(i, startL, 0)) != null)
@@ -871,6 +1065,13 @@ public class DungeonGenerationScript : MonoBehaviour
                                     for (int endL = startPos2.x + 2; endL < startPos2.x + sizeInTiles2.x - 3; ++endL)
                                     {
                                         bool intersectionL = false;
+
+                                        if (startL > startPos2.y + sizeInTiles2.y) //Fix impossible L hallways bug #2
+                                        {
+                                            intersectionL = true;
+                                            continue;
+                                        }
+
                                         for (int i = startPos1.x + sizeInTiles1.x - 1; i <= endL + 2; ++i)
                                         {
                                             if (tilemapFloor.GetTile(new Vector3Int(i, startL, 0)) != null)
@@ -1298,16 +1499,16 @@ public class DungeonGenerationScript : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.R))
         {
             //Restart the scene by pressing R
-            SceneManager.LoadScene("SceneMap1");
+            RestartScene();
         }
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
             //Zoom in and out
-            camera.GetComponent<FollowScript>().lerpDuration = .4f;
-            if (camera.GetComponent<FollowScript>().newSize == 5) camera.GetComponent<FollowScript>().newSize = 15;
-            else camera.GetComponent<FollowScript>().newSize = 5;
-            camera.GetComponent<FollowScript>().spawnedPlayer = true;
+            camera0.GetComponent<FollowScript>().lerpDuration = .4f;
+            if (camera0.GetComponent<FollowScript>().newSize == 5) camera0.GetComponent<FollowScript>().newSize = 15;
+            else camera0.GetComponent<FollowScript>().newSize = 5;
+            camera0.GetComponent<FollowScript>().spawnedPlayer = true;
         }
 
         bool allSleeping = true;
@@ -1544,16 +1745,6 @@ public class DungeonGenerationScript : MonoBehaviour
                     int startingRoom = GetRandomIntExcluding(0, connectedComponents[0].Count, excludedValues);
                     excludedValues.Add(startingRoom);
                     Debug.Log("Starting Room done: " + startingRoom);
-                    
-                    Vector3Int sizeInTilesStart = new Vector3Int(
-                    Mathf.RoundToInt(sortedRectangles[firstConnectedComponent[startingRoom]].GetComponent<SpriteRenderer>().bounds.size.x / tileSize.x),
-                    Mathf.RoundToInt(sortedRectangles[firstConnectedComponent[startingRoom]].GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
-                    1);
-                    Vector3 newPosition = new Vector3 (sortedRectangles[firstConnectedComponent[startingRoom]].transform.position.x + sizeInTilesStart.x / 2, sortedRectangles[firstConnectedComponent[startingRoom]].transform.position.y + sizeInTilesStart.y / 2, 0);
-                    Player.transform.position = newPosition;
-                    playerGO.SetActive(true);
-
-                    camera.GetComponent<FollowScript>().spawnedPlayer = true;
 
                     int treasureRoom = GetRandomIntExcluding(0, connectedComponents[0].Count, excludedValues);
                     excludedValues.Add(treasureRoom);
@@ -1585,7 +1776,25 @@ public class DungeonGenerationScript : MonoBehaviour
                     Instantiate(ChestPrefab, chest01Position, Quaternion.identity);
                     Instantiate(ChestPrefab, chest02Position, Quaternion.identity);
 
+                    objectPositionsSolid.Add(chest01Position);
+                    objectPositionsSolid.Add(chest02Position);
+                    objectPositionsSolid.Add(new Vector3(Mathf.Round(sortedRectangles[firstConnectedComponent[treasureRoom]].transform.position.x + sizeInTilesTreasure01.x / 2) + 1.5f, Mathf.Round(sortedRectangles[firstConnectedComponent[treasureRoom]].transform.position.y + sizeInTilesTreasure01.y / 2) + 0.5f, 0));
+                    objectPositionsSolid.Add(new Vector3(Mathf.Round(sortedRectangles[firstConnectedComponent[treasureRoom]].transform.position.x + sizeInTilesTreasure01.x / 2) - 1.5f, Mathf.Round(sortedRectangles[firstConnectedComponent[treasureRoom]].transform.position.y + sizeInTilesTreasure01.y / 2) + 0.5f, 0));
+
+
                     Debug.Log("Treasure Room done: " + treasureRoom);
+
+
+                    //Starting room
+                    Vector3 startingPosition = new Vector3(sortedRectangles[firstConnectedComponent[startingRoom]].transform.position.x + 1.5f, sortedRectangles[firstConnectedComponent[startingRoom]].transform.position.y + 2.5f, 0);
+                    Player.transform.position = startingPosition;
+                    playerGO.transform.position = startingPosition;
+                    playerGO.SetActive(true);
+                    playerGO.GetComponent<PlayerScript>().targetPosition = new Vector3(startingPosition.x, startingPosition.y, startingPosition.z);
+                    DijkstraMap.GetComponent<DijkstraMapGenerator>().GenerateDijkstraMap(new Vector2Int(Mathf.FloorToInt(startingPosition.x), Mathf.FloorToInt(startingPosition.y)));
+
+                    camera0.GetComponent<FollowScript>().spawnedPlayer = true;
+                    objectPositions.Add(startingPosition);
 
                     //Populating with enemies
                     for (int i = 0; i < connectedRoomsCount; ++i)
@@ -1605,23 +1814,56 @@ public class DungeonGenerationScript : MonoBehaviour
                             Vector3 cornerUpperLeft = new Vector3(room.transform.position.x + 1.5f, room.transform.position.y + room.GetComponent<SpriteRenderer>().bounds.size.y - 1.5f, 0);
                             Vector3 cornerUpperRight = new Vector3(room.transform.position.x + room.GetComponent<SpriteRenderer>().bounds.size.x - 1.5f, room.transform.position.y + room.GetComponent<SpriteRenderer>().bounds.size.y - 1.5f, 0);
 
+                            //Carpets
+                            if (Random.Range(0f, 1f) < .75f) 
+                            {
+                                //int randomLeft = Mathf.FloorToInt(Random.Range(cornerLowerLeft.x, cornerLowerRight.x - 3));
+                                //int randomRight = Mathf.FloorToInt(Random.Range(randomLeft + 3, cornerLowerRight.x));
+                                //int randomLower = Mathf.FloorToInt(Random.Range(cornerLowerLeft.y, cornerUpperLeft.y - 3));
+                                //int randomUpper = Mathf.FloorToInt(Random.Range(randomLower + 3, cornerUpperLeft.y));
+
+                                //Debug.Log("START");
+                                //Debug.Log(randomLeft);
+                                //Debug.Log(randomRight);
+                                //Debug.Log(randomLower);
+                                //Debug.Log(randomUpper);
+
+
+                                //Vector3 cornerLowerLeftRandom = new Vector3(randomLeft, randomLower, cornerLowerLeft.z);
+                                //Vector3 cornerLowerRightRandom = new Vector3(randomRight, randomLower, cornerLowerRight.z);
+                                //Vector3 cornerUpperLeftRandom = new Vector3(randomLeft, randomUpper, cornerUpperLeft.z);
+                                //Vector3 cornerUpperRightRandom = new Vector3(randomRight, randomUpper, cornerUpperRight.z);
+
+                                if (Random.Range(0f, 1f) < 0.5f)
+                                {
+                                    PlaceCarpet(cornerLowerLeft, cornerLowerRight, cornerUpperLeft, cornerUpperRight, tileCarpet02Center, tileCarpet02Lower, tileCarpet02Upper, tileCarpet02Left, tileCarpet02Right, tileCarpet02LowerLeft, tileCarpet02LowerRight, tileCarpet02UpperLeft, tileCarpet02UpperRight);
+                                    //PlaceCarpet(cornerLowerLeftRandom, cornerLowerRightRandom, cornerUpperLeftRandom, cornerUpperRightRandom, tileCarpet02Center, tileCarpet02Lower, tileCarpet02Upper, tileCarpet02Left, tileCarpet02Right, tileCarpet02LowerLeft, tileCarpet02LowerRight, tileCarpet02UpperLeft, tileCarpet02UpperRight);
+                                }
+                                else
+                                {
+                                    PlaceCarpet(cornerLowerLeft, cornerLowerRight, cornerUpperLeft, cornerUpperRight, tileCarpet01Center, tileCarpet01Lower, tileCarpet01Upper, tileCarpet01Left, tileCarpet01Right, tileCarpet01LowerLeft, tileCarpet01LowerRight, tileCarpet01UpperLeft, tileCarpet01UpperRight);
+                                    //PlaceCarpet(cornerLowerLeftRandom, cornerLowerRightRandom, cornerUpperLeftRandom, cornerUpperRightRandom, tileCarpet01Center, tileCarpet01Lower, tileCarpet01Upper, tileCarpet01Left, tileCarpet01Right, tileCarpet01LowerLeft, tileCarpet01LowerRight, tileCarpet01UpperLeft, tileCarpet01UpperRight);
+                                }
+                            }
+
+                            //Boxes
                             if (Random.Range(0f, 1f) < .45f)
                             {
-                                if (Random.Range(0f, 1f) < .3f)
+                                if (Random.Range(0f, 1f) < .3f) //Boxes at random positions
                                 {
                                     int boxCount = Random.Range(1, 8);
                                     for (int j = 0; j < boxCount; ++j)
                                     {
-                                        Vector3 boxPosition = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 2), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 4))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 5), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 1.5f, 0);
+                                        Vector3 boxPosition = new Vector3(Mathf.Round(Random.Range(Mathf.Round(room.transform.position.x + 2), Mathf.Round(room.transform.position.x + sizeInTilesRoom.x - 4))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(room.transform.position.y + 5), Mathf.Round(room.transform.position.y + sizeInTilesRoom.y - 1))) - 1.5f, 0);
 
-                                        if (!IsPositionOccupied(boxPosition))
+                                        if (!IsPositionOccupied(boxPosition) && !IsPositionOccupiedSolid(boxPosition))
                                         {
                                             GameObject boxN = Instantiate(boxPrefab01, boxPosition, Quaternion.identity);
                                             objectPositions.Add(boxPosition);
                                         }
                                     }
                                 }
-                                else if (Random.Range(0f, 1f) < 0.05f)
+                                else if (Random.Range(0f, 1f) < 0.05f) //Boxes in corners
                                 {
                                     GameObject box1 = Instantiate(boxPrefab01, cornerLowerLeft, Quaternion.identity);
                                     GameObject box2 = Instantiate(boxPrefab01, cornerLowerRight, Quaternion.identity);
@@ -1634,7 +1876,7 @@ public class DungeonGenerationScript : MonoBehaviour
                                     {
                                         for (Vector3 j = cornerLowerLeft; j.x <= cornerLowerRight.x; j += new Vector3(1, 0, 0))
                                         {
-                                            if (!IsPositionOccupied(j) && !IsWall(j + new Vector3(0, -1, 0)))
+                                            if (!IsPositionOccupied(j) && !IsWall(j + new Vector3(0, -1, 0)) && !IsPositionOccupiedSolid(j))
                                             {
                                                 GameObject boxN = Instantiate(boxPrefab01, j, Quaternion.identity);
                                                 objectPositions.Add(j);
@@ -1645,7 +1887,7 @@ public class DungeonGenerationScript : MonoBehaviour
                                     {
                                         for (Vector3 j = cornerUpperLeft; j.x <= cornerUpperRight.x; j += new Vector3(1, 0, 0))
                                         {
-                                            if (!IsPositionOccupied(j) && !IsWall(j + new Vector3(0, 1, 0)))
+                                            if (!IsPositionOccupied(j) && !IsWall(j + new Vector3(0, 1, 0)) && !IsPositionOccupiedSolid(j))
                                             {
                                                 GameObject boxN = Instantiate(boxPrefab01, j, Quaternion.identity);
                                                 objectPositions.Add(j);
@@ -1654,41 +1896,41 @@ public class DungeonGenerationScript : MonoBehaviour
                                     }
                                     if (Random.Range(0f, 1f) < 0.3f)
                                     {
-                                        if (!IsPositionOccupied(cornerUpperLeft))
+                                        if (!IsPositionOccupied(cornerUpperLeft) && !IsPositionOccupiedSolid(cornerUpperLeft))
                                         {
                                             GameObject boxN = Instantiate(boxPrefab01, cornerUpperLeft, Quaternion.identity);
                                             objectPositions.Add(cornerUpperLeft);
                                         }
                                         for (Vector3 j = cornerUpperLeft + new Vector3(0, -1, 0); j.y >= cornerLowerLeft.y; j += new Vector3(0, -1, 0))
                                         {
-                                            if (!IsPositionOccupied(j) && !IsWall(j + new Vector3(-1, 0, 0)))
+                                            if (!IsPositionOccupied(j) && !IsWall(j + new Vector3(-1, 0, 0)) && !IsPositionOccupiedSolid(j))
                                             {
                                                 GameObject boxN = Instantiate(boxPrefab01, j, Quaternion.identity);
                                                 objectPositions.Add(j);
                                             }
                                             else
                                             {
-                                                j += new Vector3(0, -1, 0);
+                                                j += new Vector3(0, -1, 0); //Skip position if previous was occupied or wall
                                             }
                                         }
                                     }
                                     if (Random.Range(0f, 1f) < 0.3f)
                                     {
-                                        if (!IsPositionOccupied(cornerUpperRight))
+                                        if (!IsPositionOccupied(cornerUpperRight) && !IsPositionOccupiedSolid(cornerUpperRight))
                                         {
                                             GameObject boxN = Instantiate(boxPrefab01, cornerUpperRight, Quaternion.identity);
                                             objectPositions.Add(cornerUpperRight);
                                         }
                                         for (Vector3 j = cornerUpperRight + new Vector3(0, -1, 0); j.y >= cornerLowerRight.y; j += new Vector3(0, -1, 0))
                                         {
-                                            if (!IsPositionOccupied(j) && !IsWall(j + new Vector3(1, 0, 0)))
+                                            if (!IsPositionOccupied(j) && !IsWall(j + new Vector3(1, 0, 0)) && !IsPositionOccupiedSolid(j))
                                             {
                                                 GameObject boxN = Instantiate(boxPrefab01, j, Quaternion.identity);
                                                 objectPositions.Add(j);
                                             }
                                             else
                                             {
-                                                j += new Vector3(0, -1, 0);
+                                                j += new Vector3(0, -1, 0); //Skip position if previous was occupied or wall
                                             }
                                         }
                                     }
@@ -1703,19 +1945,22 @@ public class DungeonGenerationScript : MonoBehaviour
                             Mathf.RoundToInt(sortedRectangles[firstConnectedComponent[i]].GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
                             1);
 
-                            Vector3 enemy01Position = new Vector3(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x / 2) + 1.5f, Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y / 2) + 0.8f, 0);
-                            Vector3 enemy02Position = new Vector3(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x / 2) - 1.5f, Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y / 2) + 0.8f, 0);
+                            Vector3 enemy01Position = new Vector3(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x / 2) + 1.5f, Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y / 2) + 0.5f, 0);
+                            Vector3 enemy02Position = new Vector3(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x / 2) - 1.5f, Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y / 2) + 0.5f, 0);
 
-                            int randomEnemy01 = UnityEngine.Random.Range(0, 7);
-                            int randomEnemy02 = UnityEngine.Random.Range(0, 7);
+                            int randomEnemy01 = UnityEngine.Random.Range(0, enemiesCount);
+                            int randomEnemy02 = UnityEngine.Random.Range(0, enemiesCount);
 
                             GameObject e01 = Instantiate(Enemies[randomEnemy01], enemy01Position, Quaternion.identity);
                             GameObject e02 = Instantiate(Enemies[randomEnemy02], enemy02Position, Quaternion.identity);
 
-                            e01.GetComponent<Enemy>().setPlayer(Player);
-                            e01.GetComponent<Enemy>().setPlayerGO(playerGO);
-                            e02.GetComponent<Enemy>().setPlayer(Player);
-                            e02.GetComponent<Enemy>().setPlayerGO(playerGO);
+                            e01.GetComponent<Enemy01Script>().DungeonManager = DungeonManager;
+                            e01.GetComponent<Enemy01Script>().DijkstraMap = DijkstraMap;
+                            e01.GetComponent<Enemy01Script>().tilemapFloor = tilemapFloor;
+
+                            e02.GetComponent<Enemy01Script>().DungeonManager = DungeonManager;
+                            e02.GetComponent<Enemy01Script>().DijkstraMap = DijkstraMap;
+                            e02.GetComponent<Enemy01Script>().tilemapFloor = tilemapFloor;
 
                         } else if (i != treasureRoom)
                         {
@@ -1729,27 +1974,20 @@ public class DungeonGenerationScript : MonoBehaviour
 
                                 Vector3 enemy01Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
                                 Vector3 enemy02Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
-                                Vector3 enemy03Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
-                                Vector3 enemy04Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
 
-                                int randomEnemy01 = 0;
-                                int randomEnemy02 = 0;
-                                int randomEnemy03 = 1;
-                                int randomEnemy04 = 1;
+                                int randomEnemy01 = UnityEngine.Random.Range(0, enemiesCount);
+                                int randomEnemy02 = UnityEngine.Random.Range(0, enemiesCount);
 
                                 GameObject e01 = Instantiate(Enemies[randomEnemy01], enemy01Position, Quaternion.identity);
                                 GameObject e02 = Instantiate(Enemies[randomEnemy02], enemy02Position, Quaternion.identity);
-                                GameObject e03 = Instantiate(Enemies[randomEnemy03], enemy03Position, Quaternion.identity);
-                                GameObject e04 = Instantiate(Enemies[randomEnemy04], enemy04Position, Quaternion.identity);
 
-                                e01.GetComponent<Enemy>().setPlayer(Player);
-                                e01.GetComponent<Enemy>().setPlayerGO(playerGO);
-                                e02.GetComponent<Enemy>().setPlayer(Player);
-                                e02.GetComponent<Enemy>().setPlayerGO(playerGO);
-                                e03.GetComponent<Enemy>().setPlayer(Player);
-                                e03.GetComponent<Enemy>().setPlayerGO(playerGO);
-                                e04.GetComponent<Enemy>().setPlayer(Player);
-                                e04.GetComponent<Enemy>().setPlayerGO(playerGO);
+                                e01.GetComponent<Enemy01Script>().DungeonManager = DungeonManager;
+                                e01.GetComponent<Enemy01Script>().DijkstraMap = DijkstraMap;
+                                e01.GetComponent<Enemy01Script>().tilemapFloor = tilemapFloor;
+
+                                e02.GetComponent<Enemy01Script>().DungeonManager = DungeonManager;
+                                e02.GetComponent<Enemy01Script>().DijkstraMap = DijkstraMap;
+                                e02.GetComponent<Enemy01Script>().tilemapFloor = tilemapFloor;
                             } else if (i == enemyRoom02)
                             {
                                 Vector3Int sizeInTilesRoom = new Vector3Int(
@@ -1759,27 +1997,20 @@ public class DungeonGenerationScript : MonoBehaviour
 
                                 Vector3 enemy01Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
                                 Vector3 enemy02Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
-                                Vector3 enemy03Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
-                                Vector3 enemy04Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
 
-                                int randomEnemy01 = 5;
-                                int randomEnemy02 = 5;
-                                int randomEnemy03 = 5;
-                                int randomEnemy04 = 5;
+                                int randomEnemy01 = UnityEngine.Random.Range(0, enemiesCount);
+                                int randomEnemy02 = UnityEngine.Random.Range(0, enemiesCount);
 
                                 GameObject e01 = Instantiate(Enemies[randomEnemy01], enemy01Position, Quaternion.identity);
                                 GameObject e02 = Instantiate(Enemies[randomEnemy02], enemy02Position, Quaternion.identity);
-                                GameObject e03 = Instantiate(Enemies[randomEnemy03], enemy03Position, Quaternion.identity);
-                                GameObject e04 = Instantiate(Enemies[randomEnemy04], enemy04Position, Quaternion.identity);
 
-                                e01.GetComponent<Enemy>().setPlayer(Player);
-                                e01.GetComponent<Enemy>().setPlayerGO(playerGO);
-                                e02.GetComponent<Enemy>().setPlayer(Player);
-                                e02.GetComponent<Enemy>().setPlayerGO(playerGO);
-                                e03.GetComponent<Enemy>().setPlayer(Player);
-                                e03.GetComponent<Enemy>().setPlayerGO(playerGO);
-                                e04.GetComponent<Enemy>().setPlayer(Player);
-                                e04.GetComponent<Enemy>().setPlayerGO(playerGO);
+                                e01.GetComponent<Enemy01Script>().DungeonManager = DungeonManager;
+                                e01.GetComponent<Enemy01Script>().DijkstraMap = DijkstraMap;
+                                e01.GetComponent<Enemy01Script>().tilemapFloor = tilemapFloor;
+
+                                e02.GetComponent<Enemy01Script>().DungeonManager = DungeonManager;
+                                e02.GetComponent<Enemy01Script>().DijkstraMap = DijkstraMap;
+                                e02.GetComponent<Enemy01Script>().tilemapFloor = tilemapFloor;
                             } else if (i == enemyRoom03)
                             {
                                 Vector3Int sizeInTilesRoom = new Vector3Int(
@@ -1789,27 +2020,20 @@ public class DungeonGenerationScript : MonoBehaviour
 
                                 Vector3 enemy01Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
                                 Vector3 enemy02Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
-                                Vector3 enemy03Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
-                                Vector3 enemy04Position = new Vector3(Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + 1), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.x + sizeInTilesRoom.x - 3))) + 0.5f, Mathf.Round(Random.Range(Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + 3), Mathf.Round(sortedRectangles[firstConnectedComponent[i]].transform.position.y + sizeInTilesRoom.y - 1))) - 0.5f, 0);
 
-                                int randomEnemy01 = 4;
-                                int randomEnemy02 = 4;
-                                int randomEnemy03 = 4;
-                                int randomEnemy04 = 4;
+                                int randomEnemy01 = UnityEngine.Random.Range(0, enemiesCount);
+                                int randomEnemy02 = UnityEngine.Random.Range(0, enemiesCount);
 
                                 GameObject e01 = Instantiate(Enemies[randomEnemy01], enemy01Position, Quaternion.identity);
                                 GameObject e02 = Instantiate(Enemies[randomEnemy02], enemy02Position, Quaternion.identity);
-                                GameObject e03 = Instantiate(Enemies[randomEnemy03], enemy03Position, Quaternion.identity);
-                                GameObject e04 = Instantiate(Enemies[randomEnemy04], enemy04Position, Quaternion.identity);
 
-                                e01.GetComponent<Enemy>().setPlayer(Player);
-                                e01.GetComponent<Enemy>().setPlayerGO(playerGO);
-                                e02.GetComponent<Enemy>().setPlayer(Player);
-                                e02.GetComponent<Enemy>().setPlayerGO(playerGO);
-                                e03.GetComponent<Enemy>().setPlayer(Player);
-                                e03.GetComponent<Enemy>().setPlayerGO(playerGO);
-                                e04.GetComponent<Enemy>().setPlayer(Player);
-                                e04.GetComponent<Enemy>().setPlayerGO(playerGO);
+                                e01.GetComponent<Enemy01Script>().DungeonManager = DungeonManager;
+                                e01.GetComponent<Enemy01Script>().DijkstraMap = DijkstraMap;
+                                e01.GetComponent<Enemy01Script>().tilemapFloor = tilemapFloor;
+
+                                e02.GetComponent<Enemy01Script>().DungeonManager = DungeonManager;
+                                e02.GetComponent<Enemy01Script>().DijkstraMap = DijkstraMap;
+                                e02.GetComponent<Enemy01Script>().tilemapFloor = tilemapFloor;
                             }
                         }
                     }

@@ -7,7 +7,7 @@ public class FollowScript : MonoBehaviour
     public GameObject objectToFollow;
 
     public float speed = 2.0f;
-    public float newSize = 5f;
+    public float newSize = 3.5f;
     public float lerpDuration = 1f;
     public bool spawnedPlayer = false;
 
@@ -19,6 +19,8 @@ public class FollowScript : MonoBehaviour
     {
         mainCamera = Camera.main;
         initialSize = mainCamera.orthographicSize;
+
+        Application.targetFrameRate = 120;
     }
 
     void FixedUpdate()

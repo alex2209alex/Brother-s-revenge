@@ -11,5 +11,6 @@ public class BoxController : MonoBehaviour
     {
         DungeonManager.GetComponent<DungeonGenerationScript>().objectPositions.Remove(gameObject.transform.position);
         Destroy(gameObject);
+        Debug.Log("a");
     }
 }
