@@ -12,7 +12,7 @@ Random Enemies and Items: Encounter a variety of foes and powerful items that ca
 
 Special Enemy Rooms: Beware of the special enemy rooms scattered throughout the dungeons. These challenging encounters will push your limits and reward you with great spoils upon victory.
 
-![Bigger map](ss3.png)
+![Bigger map](ss4.png)
 
 Starting Room: Begin your adventure in the starting room, a safe haven where you can prepare yourself for the dangers that lie ahead. Take a moment to plan your strategy and gather your strength.
 
